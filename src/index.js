@@ -1,13 +1,32 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
+// Preload fonts
+const preloadFonts = () => {
+  const link = document.createElement('link');
+  link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans:wght@400;500;600;700&display=swap';
+  link.rel = 'preload';
+  link.as = 'style';
+  link.onload = () => link.rel = 'stylesheet';
+  document.head.appendChild(link);
+};
+
+// Enable smooth scrolling
+document.documentElement.style.scrollBehavior = 'smooth';
+
+// Initialize app
+preloadFonts();
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
   </React.StrictMode>
 );
 
