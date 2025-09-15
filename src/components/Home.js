@@ -7,7 +7,7 @@ const Home = () => {
       style={{ fontFamily: 'Inter, "Noto Sans", sans-serif' }}
     >
       <div className="flex h-full grow flex-col">
-        {/* Header */}
+        {/* Headereeeee */}
         {/* <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#e7eef4] px-10 py-4 shadow-sm">
           <div className="flex items-center gap-3 text-[#0d151c]">
             <div className="size-6 text-[#0d8bf2]">
