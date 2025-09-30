@@ -7,6 +7,7 @@ import Quiz from './components/Quiz';
 import Admin from './components/Admin';
 import Dashboard from './components/Dashboard';
 import Signup from './components/Signup';
+import Events from './components/Events';
 
 // Create a layout wrapper component
 const PageLayout = ({ children }) => {
@@ -52,6 +53,7 @@ function App() {
         } />
         <Route path="/signup" element={<Signup />} />
         <Route path="/signin" element={<Signup />} />
+        <Route path="/events" element={<Events />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>

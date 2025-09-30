@@ -1,7 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 function Dashboard() {
+  const [events, setEvents] = useState([]);
+  const [showEvents, setShowEvents] = useState(false);
+
+  // Fetch events when dashboard loads
+  React.useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/events');
+      const data = await response.json();
+      setEvents(data);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    }
+  };
+
+  const handleViewEvents = async () => {
+    setShowEvents(true);
+  };
+
   return (
     <div className="bg-gray-50 min-h-screen">
       {/* Header */}
@@ -12,7 +34,7 @@ function Dashboard() {
               <path d="M24 45.8096C19.6865 45.8096 15.4698 44.5305 11.8832 42.134C8.29667 39.7376 5.50128 36.3314 3.85056 32.3462C2.19985 28.361 1.76794 23.9758 2.60947 19.7452C3.451 15.5145 5.52816 11.6284 8.57829 8.5783C11.6284 5.52817 15.5145 3.45101 19.7452 2.60948C23.9758 1.76795 28.361 2.19986 32.3462 3.85057C36.3314 5.50129 39.7376 8.29668 42.134 11.8833C44.5305 15.4698 45.8096 19.6865 45.8096 24L24 24L24 45.8096Z" fill="currentColor"></path>
             </svg>
           </div>
-          <h2 className="text-xl font-bold text-gray-900">Mohandas Engineering College</h2>
+          <h2 className="text-xl font-bold text-gray-900">MASTEC</h2>
         </div>
         {/* <nav className="hidden md:flex items-center gap-6">
           <Link to="/dashboard" className="text-blue-600 text-sm font-semibold">Dashboard</Link>
@@ -156,45 +178,30 @@ function Dashboard() {
                   <h2 className="text-lg font-semibold text-gray-900">Upcoming Events</h2>
                 </div>
                 <div className="divide-y divide-gray-200">
-                  {[
-                    { 
-                      title: 'Midterm Exam', 
-                      date: 'Mon, May 15', 
-                      time: '9:00 AM - 12:00 PM',
-                      type: 'exam',
-                      course: 'Algorithms'
-                    },
-                    { 
-                      title: 'Project Submission', 
-                      date: 'Fri, May 19', 
-                      time: '11:59 PM',
-                      type: 'assignment',
-                      course: 'Web Development'
-                    },
-                    { 
-                      title: 'Guest Lecture', 
-                      date: 'Mon, May 22', 
-                      time: '2:00 PM - 4:00 PM',
-                      type: 'event',
-                      course: 'Computer Science Department'
-                    },
-                  ].map((event, index) => (
-                    <div key={index} className="p-4 hover:bg-gray-50 transition-colors">
-                      <div className="flex items-start">
-                        <div className="flex-shrink-0 w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 font-medium">
-                          {event.date.split(' ')[1]}
-                        </div>
-                        <div className="ml-4">
-                          <p className="text-sm font-medium text-gray-900">{event.title}</p>
-                          <p className="text-sm text-gray-500">{event.course}</p>
-                          <p className="text-xs text-gray-500 mt-1">{event.time}</p>
+                  {events.length === 0 ? (
+                    <div className="p-4 text-gray-500">No upcoming events.</div>
+                  ) : (
+                    events.slice(0, 3).map((event, index) => (
+                      <div key={event._id} className="p-4 hover:bg-gray-50 transition-colors">
+                        <div className="flex items-start">
+                          <div className="flex-shrink-0 w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 font-medium">
+                            {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </div>
+                          <div className="ml-4">
+                            <p className="text-sm font-medium text-gray-900">{event.title}</p>
+                            <p className="text-sm text-gray-500">{event.venue}</p>
+                            <p className="text-xs text-gray-500 mt-1">{event.time}</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
                 <div className="px-6 py-4 bg-gray-50 text-right">
-                  <button className="text-sm font-medium text-blue-600 hover:text-blue-800">
+                  <button
+                    className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                    onClick={handleViewEvents}
+                  >
                     View calendar →
                   </button>
                 </div>
@@ -233,6 +240,31 @@ function Dashboard() {
           </div>
         </div>
       </main>
+
+      {/* Events Modal/Section */}
+      {showEvents && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-lg w-full">
+            <h2 className="text-lg font-semibold mb-4">All Events</h2>
+            <button
+              className="absolute top-2 right-4 text-gray-500 hover:text-gray-700"
+              onClick={() => setShowEvents(false)}
+            >
+              Close
+            </button>
+            <ul>
+              {events.map(event => (
+                <li key={event._id} className="mb-3 border-b pb-2">
+                  <div className="font-bold">{event.title}</div>
+                  <div>{event.description}</div>
+                  <div>{new Date(event.date).toLocaleDateString()} {event.time}</div>
+                  <div className="text-sm text-gray-500">{event.venue}</div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

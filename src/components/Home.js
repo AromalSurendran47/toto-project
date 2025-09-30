@@ -1,197 +1,247 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React from "react";
+
 
 const Home = () => {
-  const features = [
-    {
-      icon: '📚',
-      title: 'Interactive Learning',
-      description: 'Engage with interactive course materials and hands-on projects that make learning fun and effective.'
-    },
-    {
-      icon: '🎯',
-      title: 'Track Progress',
-      description: 'Monitor your learning journey with detailed progress tracking and personalized recommendations.'
-    },
-    {
-      icon: '👨‍🏫',
-      title: 'Expert Instructors',
-      description: 'Learn from industry experts with years of experience in their respective fields.'
-    },
-    {
-      icon: '📱',
-      title: 'Mobile Friendly',
-      description: 'Access your courses anytime, anywhere on any device with our responsive platform.'
-    }
-  ];
-
-  const testimonials = [
-    {
-      quote: "This platform transformed my learning experience. The courses are top-notch and the community is incredibly supportive.",
-      author: "Sarah Johnson",
-      role: "Computer Science Student"
-    },
-    {
-      quote: "The interactive lessons and real-world projects helped me land my dream job in tech. Highly recommended!",
-      author: "Michael Chen",
-      role: "Web Developer"
-    },
-    {
-      quote: "As an instructor, I love how easy it is to create engaging content and connect with students worldwide.",
-      author: "Dr. Emily Parker",
-      role: "Senior Lecturer"
-    }
-  ];
-
   return (
-    <div className="bg-gradient-to-b from-gray-50 to-white">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto">
-          <div className="relative z-10 pb-8 sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
-            <main className="mt-10 mx-auto px-4 sm:mt-12 sm:px-6 lg:mt-16 lg:px-8 xl:mt-20">
-              <div className="sm:text-center lg:text-left">
-                <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
-                  <span className="block">Learn, Grow, and</span>
-                  <span className="block text-blue-600">Excel in Your Career</span>
-                </h1>
-                <p className="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
-                  Join thousands of students worldwide who are learning new skills and advancing their careers with our comprehensive courses.
-                </p>
-                <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
-                  <div className="rounded-md shadow">
-                    <Link
-                      to="/courses"
-                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 md:py-4 md:text-lg md:px-10 transition duration-150 ease-in-out transform hover:-translate-y-1"
-                    >
-                      Explore Courses
-                    </Link>
+
+    <div
+  
+      className="relative flex size-full min-h-screen flex-col overflow-x-hidden bg-slate-50 font-sans"
+      style={{ fontFamily: 'Inter, "Noto Sans", sans-serif' }}
+    >
+      <div className="flex h-full grow flex-col">
+             {/* <Navbar/> */}
+        {/* Headereeeee */}
+        {/* <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#e7eef4] px-10 py-4 shadow-sm">
+          <div className="flex items-center gap-3 text-[#0d151c]">
+            <div className="size-6 text-[#0d8bf2]">
+              <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                <path d="M36.7273 44C33.9891 44 31.6043 39.8386 30.3636 33.69C29.123 39.8386 26.7382 44 24 44C21.2618 44 18.877 39.8386 17.6364 33.69C16.3957 39.8386 14.0109 44 11.2727 44C7.25611 44 4 35.0457 4 24C4 12.9543 7.25611 4 11.2727 4C14.0109 4 16.3957 8.16144 17.6364 14.31C18.877 8.16144 21.2618 4 24 4C26.7382 4 29.123 8.16144 30.3636 14.31C31.6043 8.16144 33.9891 4 36.7273 4C40.7439 4 44 12.9543 44 24C44 35.0457 40.7439 44 36.7273 44Z" fill="currentColor"></path>
+              </svg>
+            </div>
+            <h2 className="text-[#0d151c] text-xl font-bold leading-tight tracking-[-0.015em]">
+              University Portal
+            </h2>
+          </div>
+          <div className="flex flex-1 justify-end gap-6">
+            <nav className="flex items-center gap-8">
+              <a className="text-[#49779c] hover:text-[#0d8bf2] text-sm font-medium leading-normal transition-colors" href="#">Academics</a>
+              <a className="text-[#49779c] hover:text-[#0d8bf2] text-sm font-medium leading-normal transition-colors" href="#">Admissions</a>
+              <a className="text-[#49779c] hover:text-[#0d8bf2] text-sm font-medium leading-normal transition-colors" href="#">Research</a>
+              <a className="text-[#49779c] hover:text-[#0d8bf2] text-sm font-medium leading-normal transition-colors" href="#">About Us</a>
+              <a className="text-[#49779c] hover:text-[#0d8bf2] text-sm font-medium leading-normal transition-colors" href="#">News &amp; Events</a>
+            </nav>
+            <div className="flex gap-2">
+              <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-md h-10 px-4 bg-[#0d8bf2] text-slate-50 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#0b78d4] transition-colors">
+                <span className="truncate">Apply Now</span>
+              </button>
+              <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-md h-10 px-4 bg-transparent text-[#0d151c] text-sm font-bold leading-normal tracking-[0.015em] border border-slate-300 hover:bg-slate-100 transition-colors">
+                <span className="truncate">Student Login</span>
+              </button>
+            </div>
+          </div>
+        </header> */}
+        <main className="flex-1">
+          {/* Hero Section */}
+          <section
+            className="relative flex min-h-[60vh] items-center justify-center bg-cover bg-center py-20 text-white"
+            style={{
+              backgroundImage:
+                'linear-gradient(rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.6) 100%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuBzCgPN7wGgKIPkAIgN4SV0Hm0le3MK9UWZOBS9kyjhLfRBySVGJnVFvIc9g0Qk1qexPLmjWzn3ORTXLWCOcdMZOpn0d2CE8NoIa0YPQvq-or4fRdnfSM_Qb1rh1ZVPr3_tDOG1K4taDrUzSk1_BKsE63o-fE6wZWTqySeOaNrPh7hkvFw7kliU5JMGnzOTWxyWmaTm_kM32EqF1Pd7t8eWzYqYMGs8cXKkNwt-hOqsLwphWWrK2i4OKnLgqwsHdPxL5DPqDfYc4b4")',
+            }}
+          >
+            <div className="container mx-auto px-4 text-center">
+              <h1 className="text-4xl font-black leading-tight tracking-tight md:text-6xl">
+                Welcome to MASTEC
+              </h1>
+              <p className="mt-4 max-w-3xl mx-auto text-lg font-light md:text-xl">
+            
+              </p>
+              <button className="mt-8 flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-md h-12 px-6 bg-[#0d8bf2] text-slate-50 text-base font-bold leading-normal tracking-[0.015em] hover:bg-[#0b78d4] transition-colors mx-auto">
+                <span className="truncate">Explore Programs</span>
+              </button>
+            </div>
+          </section>
+          {/* Features */}
+          <section className="py-20 bg-white">
+            <div className="container mx-auto px-4">
+              <div className="grid md:grid-cols-3 gap-12 text-center">
+                <div>
+                  <h2 className="text-2xl font-bold text-[#0d151c] mb-3">Academic Excellence</h2>
+                  <p className="text-[#49779c]">
+                    Renowned for our commitment to academic excellence, offering a wide range of programs to challenge and inspire.
+                  </p>
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-[#0d151c] mb-3">Vibrant Campus Life</h2>
+                  <p className="text-[#49779c]">
+                    Experience an inclusive community with countless opportunities for personal and academic growth.
+                  </p>
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-[#0d151c] mb-3">Student Success</h2>
+                  <p className="text-[#49779c]">
+                    Our supportive environment prepares students for leadership and success in their chosen fields.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+          {/* Student Success Stories */}
+          <section className="py-20 bg-slate-50">
+            <div className="container mx-auto px-4">
+              <h2 className="text-3xl font-bold text-[#0d151c] text-center mb-12">Students Achievements</h2>
+              <div className="grid md:grid-cols-3 gap-8">
+                <div className="flex flex-col gap-4 rounded-lg overflow-hidden shadow-md bg-white">
+                  <div
+                    className="w-full bg-center bg-no-repeat aspect-[4/3] bg-cover"
+                    style={{
+                      backgroundImage:
+                        'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBJ0t8QTUlWOJSnTD0cfaTz15hJzaMPZlswDqtz4sPoLTYc3TKoe4EzY5yVjzFu1XcRkv1cGEGg3E2gIyOljf6mmtrqswl1CPaNKg-EB9FWHxx7IBJZnyfUJEY0-tUVqgM1_asG29blRP4oOeCKt4PckTGPPLbGh9nOihZ7USua9gwq9XfEd3Mee19Qf6lRedGyK_HAn2JFY0SJ9Zv0UtKLeXnu4DMae2Nsoqvh2jFNCREWLt20KZBx3HZ1o1k-b3xYxqS14bQSkbs")',
+                    }}
+                  ></div>
+                  <div className="p-6">
+                    <p className="text-[#0d151c] text-lg font-medium">Sarah Chen</p>
+                    <p className="text-[#49779c] text-sm">Computer Science Graduate</p>
                   </div>
-                  <div className="mt-3 rounded-md shadow sm:mt-0 sm:ml-3">
-                    <Link
-                      to="/about"
-                      className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-blue-700 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10 transition duration-150 ease-in-out"
-                    >
-                      Learn More
-                    </Link>
+                </div>
+                <div className="flex flex-col gap-4 rounded-lg overflow-hidden shadow-md bg-white">
+                  <div
+                    className="w-full bg-center bg-no-repeat aspect-[4/3] bg-cover"
+                    style={{
+                      backgroundImage:
+                        'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBJqBeAqzKF1VdLwxpFkJZ0oBY3PvMEzB9piiwMzCBWYSaaYKbpBnqBi_rjy4i3DC6fEIExLiAbc39dbQXb-KB42MusgpG7zTGY6FaVbhTWrv1BJmf6-4JhZG2BgpxIvHQNjHK82GxrZD8uMiQvN6TsKzibTE4CmptTk9Ac51rz5-G0h4R0t2Pv6DZJcdkQqMvpNSCPeeF8vx0ipgQ6Jgqj2d3nxEx-4D9liu6m1IJsAa3kIYa_tXd2Pa3gFSIvajFvriaSfZ8ruC8")',
+                    }}
+                  ></div>
+                  <div className="p-6">
+                    <p className="text-[#0d151c] text-lg font-medium">David Lee</p>
+                    <p className="text-[#49779c] text-sm">Business Administration Alumnus</p>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-4 rounded-lg overflow-hidden shadow-md bg-white">
+                  <div
+                    className="w-full bg-center bg-no-repeat aspect-[4/3] bg-cover"
+                    style={{
+                      backgroundImage:
+                        'url("https://lh3.googleusercontent.com/aida-public/AB6AXuC0p071ntUCuf0kbjuhNkIWzvfpqURfWWK9_mRgdpHZobCgMRzt4QXvV3-EmcdOgVL4Ritj0UHOkrt2CUCKA6HMb2ORLo_HB6QV9hKuVq6_vUG5GdONk1q0mAsuZSi16YwpxXyg6xoLBWukLrgFn9EhnFvj7oXZP5Z5zij8f4CmfnOEHX3gszRwMLgPjQpbllyjYTFO7f0XeLgPJoL9RFec6lOI8JZpP_qig4PXehp33ahj6hiyaVLEWxMGeVEXj9XnAW3kBx_oogY")',
+                    }}
+                  ></div>
+                  <div className="p-6">
+                    <p className="text-[#0d151c] text-lg font-medium">Maria Rodriguez</p>
+                    <p className="text-[#49779c] text-sm">Engineering Innovator</p>
                   </div>
                 </div>
               </div>
-            </main>
-          </div>
-        </div>
-        <div className="lg:absolute lg:inset-y-0 lg:right-0 lg:w-1/2">
-          <img
-            className="h-56 w-full object-cover sm:h-72 md:h-96 lg:w-full lg:h-full"
-            src="https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1740&q=80"
-            alt="Students learning together"
-          />
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-              Why Choose Our Platform?
-            </h2>
-            <p className="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">
-              We provide the best learning experience with our innovative platform and expert instructors.
-            </p>
-          </div>
-
-          <div className="mt-16">
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
-              {features.map((feature, index) => (
-                <div key={index} className="group relative bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-blue-500 rounded-xl shadow-sm hover:shadow-md transition-all duration-300">
-                  <div className="rounded-lg bg-blue-50 p-3 inline-flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform duration-300">
-                    {feature.icon}
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900">
-                    <span className="absolute inset-0" aria-hidden="true" />
-                    {feature.title}
-                  </h3>
-                  <p className="mt-2 text-sm text-gray-500">
-                    {feature.description}
-                  </p>
-                </div>
-              ))}
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="bg-gray-50 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-              What Our Students Say
-            </h2>
-            <p className="mt-4 max-w-2xl text-xl text-gray-500 mx-auto">
-              Don't just take our word for it. Here's what our students have to say.
-            </p>
-          </div>
-
-          <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {testimonials.map((testimonial, index) => (
-              <div key={index} className="bg-white p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
-                <div className="relative">
-                  <svg
-                    className="h-12 w-12 text-gray-200 absolute -top-6 -left-2"
-                    fill="currentColor"
-                    viewBox="0 0 32 32"
-                    aria-hidden="true"
-                  >
-                    <path d="M9.352 4C4.456 7.456 1 13.12 1 19.36c0 5.088 3.072 8.064 6.016 8.064 3.36 0 5.856-2.688 5.856-5.856 0-3.168-2.208-5.472-5.088-5.472-.576 0-1.344.096-1.536.192.48-3.264 3.552-7.104 6.624-9.024L9.352 4zm16.512 0c-4.8 3.456-8.256 9.12-8.256 15.36 0 5.088 3.072 8.064 6.016 8.064 3.264 0 5.856-2.688 5.856-5.856 0-3.168-2.304-5.472-5.184-5.472-.576 0-1.248.096-1.44.192.48-3.264 3.552-7.104 6.624-9.024L25.864 4z" />
-                  </svg>
-                  <p className="relative text-gray-600 mt-8">
-                    {testimonial.quote}
-                  </p>
-                </div>
-                <div className="mt-6 flex items-center">
-                  <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
-                    {testimonial.author.charAt(0)}
+          </section>
+          {/* Announcements & Events */}
+          <section className="py-20 bg-white">
+            <div className="container mx-auto px-4">
+              <div className="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                  <h2 className="text-3xl font-bold text-[#0d151c] mb-6">Announcements</h2>
+                  <div className="space-y-6">
+                    <div className="flex items-start gap-4 p-4 rounded-lg hover:bg-slate-50 transition-colors">
+                      <div
+                        className="flex-shrink-0 w-24 h-24 bg-cover bg-center rounded-md"
+                        style={{
+                          backgroundImage:
+                            'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCfQQOUldRyY5EBLmZBhoGoT2XdQaW2VcMqC7VoPQ2xzEmkBoBr-nEUQ759yQUDaChffMuk5Su_XcOVbqGFZ0HYtfdrGUNPmOdpA4RiFlf0aMz_1WdCpwZLn2rMXq1kSgZnd4p1h2SkW0MGGjRfob_zuScFiqyanDb94Bo3Yn0v-73Ca9kKgzjJ20IaND1oNmybZ3fo-31NfzTbuUhWZ_dktViJ5jMzVvhFxGqKm_z4JbkPygc17MFLwJRoWx1d9zLPkM4CnxvBUCk")',
+                        }}
+                      ></div>
+                      <div>
+                        <p className="text-[#0d151c] text-lg font-bold">New Scholarship Opportunities</p>
+                        <p className="text-[#49779c] text-sm mt-1">
+                          Explore our latest scholarship programs designed to support students from diverse backgrounds.
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">{testimonial.author}</p>
-                    <p className="text-sm text-gray-500">{testimonial.role}</p>
+                </div>
+                <div>
+                  <h2 className="text-3xl font-bold text-[#0d151c] mb-6">Upcoming Events</h2>
+                  <div className="space-y-6">
+                    <div className="flex items-start gap-4 p-4 rounded-lg hover:bg-slate-50 transition-colors">
+                      <div
+                        className="flex-shrink-0 w-24 h-24 bg-cover bg-center rounded-md"
+                        style={{
+                          backgroundImage:
+                            'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDC-UscW0fKQdoHDHQCVL965BY9UZJtDwmv-mTXl119arYf_gKsaQgztsxzOXU2RFzEro_0FhiN2igAeFtch4a3ADqCuMXt70Url9UFxJkMnggfS5yDZjtbP5C3eew8hKTG2Q7uBJhlos6Hc4xtyNEnrnqWIax15ofZ0mTz5Km-Tc4YlIk-PelnSQnzBzu9-N8rhcZxRc8y_CLQaLv-AfJZ8dVqC_FgEk26DVtgm1K35nr0BVfYLRBLboNysYjnqFky3VMfhliykmM")',
+                        }}
+                      ></div>
+                      <div>
+                        <p className="text-[#0d151c] text-lg font-bold">Campus Open Day</p>
+                        <p className="text-[#49779c] text-sm mt-1">
+                          Join us for our annual Open Day to tour the campus, meet faculty, and learn about our programs.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="bg-blue-700">
-        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8 lg:flex lg:items-center lg:justify-between">
-          <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-            <span className="block">Ready to get started?</span>
-            <span className="block text-blue-200">Start your learning journey today.</span>
-          </h2>
-          <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
-            <div className="inline-flex rounded-md shadow">
-              <Link
-                to="/signup"
-                className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-blue-600 bg-white hover:bg-blue-50 transition duration-150 ease-in-out transform hover:-translate-y-1"
-              >
-                Get started
-              </Link>
             </div>
-            <div className="ml-3 inline-flex rounded-md shadow">
-              <Link
-                to="/courses"
-                className="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 bg-opacity-60 hover:bg-opacity-70 transition duration-150 ease-in-out"
-              >
-                Browse courses
-              </Link>
+          </section>
+          {/* Photo Gallery */}
+          <section className="py-20 bg-slate-50">
+            <div className="container mx-auto px-4">
+              <h2 className="text-3xl font-bold text-[#0d151c] text-center mb-12">Photo Gallery</h2>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="overflow-hidden rounded-lg shadow-md">
+                  <div
+                    className="w-full bg-center bg-no-repeat aspect-square bg-cover hover:scale-105 transition-transform duration-300"
+                    style={{
+                      backgroundImage:
+                        'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCEtJOi10hwyk1dNlVkDmrWul11dxD-iDpIfFsuUDV2_w4Qz_ZwGOCkDYGqA4flKZemg3alrh_J-cEu_TVhNOUc4jErrCQHK-0PjzgcZUFiDNIZ8vzSxTTk2t4C0-eQ8YcSqJx-DKBvhFOFddiY34jh38JhcLGETRRwXaJynuDEhsvHsHdmNil9uHXFir-eAcowgfSdofEJZ_0BoB-eFs_M3viYywYB-87jI_LsUjIbvDL7XlcC_DiGgYBLFfT0FYz_jqvRvYb5D0A")',
+                    }}
+                  ></div>
+                </div>
+                <div className="overflow-hidden rounded-lg shadow-md">
+                  <div
+                    className="w-full bg-center bg-no-repeat aspect-square bg-cover hover:scale-105 transition-transform duration-300"
+                    style={{
+                      backgroundImage:
+                        'url("https://lh3.googleusercontent.com/aida-public/AB6AXuALEik7OmwiS7qdLcVlQiXYmkX3eeKK854IG_KJ8qMyugdluTaHQAyDk5xV-ES9Xi7ab6xmRRa6QqGmfsBRWEJ6Z0m-xE7j2J66ZLFw-3k1wuBDdm8rYQtvTOqrTffPQTZPH5sjwO3Qgz8OZs1A2BrO-KWPaRFWvXpXAA28z4i0zTwhuNwXje3XCy1rtEhTd9-9cVHryqf2FlsKfUIlUJ1B2ypGpCk4OWSQbDy9shjBsfFft9n4P1AdySJFZheh2ukLTw8N7bUMxiw")',
+                    }}
+                  ></div>
+                </div>
+                <div className="overflow-hidden rounded-lg shadow-md">
+                  <div
+                    className="w-full bg-center bg-no-repeat aspect-square bg-cover hover:scale-105 transition-transform duration-300"
+                    style={{
+                      backgroundImage:
+                        'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBb806GVNJZjqKe06J66OORtmX3RflPapukmTg2XlkYRF-rfUFXUEg91c6RWayZPQWyUycOSPTG2k52E5dmsguAwdu7TeXMoiwzPH5u8lDoJPPwaAkpC5yTWSxHTJVTa-P3eDkMykQshP_ixALW8K01J8k82hkVEZYlrAib3__IIXLrwYPQs42N-qIUzgZeq4s4nqwOMjkFlDjwwddulOLlbSruJvPd7k4eV21g2EtVYiKK5O008K31q_KHaAkHH3TD98-PPK3cH7w")',
+                    }}
+                  ></div>
+                </div>
+                <div className="overflow-hidden rounded-lg shadow-md">
+                  <div
+                    className="w-full bg-center bg-no-repeat aspect-square bg-cover hover:scale-105 transition-transform duration-300"
+                    style={{
+                      backgroundImage:
+                        'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDgokHde2D7LP6yHYHnklZ3CfFx_TDiUeahFJAq9CXX4zcQqZ-qR_lRyJyI-NlXUmirlvnaYdYsxn6YL4v1dPv-cmEN3G_BIO5p0zPudvn8EhLOGOxWE1C51NZsfhMSdm7sX1ItaWXBgk4Ln2ku1g6CLRBwZ-4B1BT6ZkK9xSfU916D3S7OJz1zVyrLjhlfhv3ViHS3fDafQSV0jvQWhSEkFMMY8042QY_sSHQmxO6ic7n4MX2epLJSWAfeuwa00EQPa0QHuRwnWos")',
+                    }}
+                  ></div>
+                </div>
+              </div>
             </div>
+          </section>
+          {/* CTA */}
+                    
+        </main>
+        {/* Footer */}
+        <footer className="bg-[#0d151c] text-white">
+          <div className="container mx-auto px-4 py-10">
+            <div className="flex flex-wrap items-center justify-center gap-6 text-center">
+              <a className="text-slate-300 hover:text-white text-sm" href="#">Contact Us</a>
+              <a className="text-slate-300 hover:text-white text-sm" href="#">Privacy Policy</a>
+              <a className="text-slate-300 hover:text-white text-sm" href="#">Terms of Service</a>
+            </div>
+            <p className="mt-8 text-center text-slate-400 text-sm">
+              © 2023 Mohandas Engineering College All rights reserved.
+            </p>
           </div>
-        </div>
-      </section>
+        </footer>
+      </div>
     </div>
   );
 };
