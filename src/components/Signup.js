@@ -1,188 +1,295 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import Navbar from './Navbar';
+import Layout from './Layout';
+
+const semesters = ['1st', '2nd', '3rd', '4th'];
 
 const Signup = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
+  const [activeTab, setActiveTab] = useState('login');
+  const [loginData, setLoginData] = useState({ email: '', password: '' });
+  const [registerData, setRegisterData] = useState({
     name: '',
     email: '',
-    password: '',
-    confirmPassword: ''
+    phone: '',
+    semester: semesters[0],
+    password: ''
   });
-  const [isSignIn, setIsSignIn] = useState(false);
   const [errors, setErrors] = useState({});
 
-  const handleChange = (e) => {
+  const handleChange = (e, form) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    if (form === 'login') {
+      setLoginData(prev => ({ ...prev, [name]: value }));
+    } else {
+      setRegisterData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
-  const validateForm = () => {
+  const validateEmail = (email) => {
+    // Simple email regex
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const validatePhone = (phone) => {
+    // Simple phone validation (10 digits)
+    return /^\d{10}$/.test(phone);
+  };
+
+  const validateLogin = () => {
     const newErrors = {};
-    
-    if (!formData.email) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
-    }
-    
-    if (!formData.password) {
-      newErrors.password = 'Password is required';
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
-    }
-    
-    if (!isSignIn) {
-      if (!formData.name) {
-        newErrors.name = 'Name is required';
-      }
-      if (formData.password !== formData.confirmPassword) {
-        newErrors.confirmPassword = 'Passwords do not match';
-      }
-    }
-    
+    if (!loginData.email) newErrors.email = 'Email is required';
+    else if (!validateEmail(loginData.email)) newErrors.email = 'Invalid email format';
+    if (!loginData.password) newErrors.password = 'Password is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const validateRegister = () => {
+    const newErrors = {};
+    if (!registerData.name) newErrors.name = 'Name is required';
+    if (!registerData.email) newErrors.email = 'Email is required';
+    else if (!validateEmail(registerData.email)) newErrors.email = 'Invalid email format';
+    if (!registerData.phone) newErrors.phone = 'Phone is required';
+    else if (!validatePhone(registerData.phone)) newErrors.phone = 'Phone must be 10 digits';
+    if (!registerData.semester) newErrors.semester = 'Semester is required';
+    if (!registerData.password) newErrors.password = 'Password is required';
+    else if (registerData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      // Handle form submission
-      console.log('Form submitted:', formData);
-      // Redirect to home or dashboard after successful signup/login
-      navigate('/');
+    if (validateLogin()) {
+      try {
+        const response = await fetch('http://localhost:3001/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(loginData)
+        });
+        const data = await response.json();
+        if (response.ok) {
+          localStorage.setItem('isLoggedIn', 'true');
+          localStorage.setItem('userName', data.name);   // Store user name
+          localStorage.setItem('userEmail', loginData.email); // Store user email
+          localStorage.setItem('userRole', data.role);   // Store user role
+          toast.success('Login successful!');
+          setTimeout(() => navigate('/'), 1500);
+        } else {
+          toast.error(data.message || 'Login failed');
+        }
+      } catch (error) {
+        toast.error('Network error. Please try again.');
+      }
+    }
+  };
+
+  const handleRegisterSubmit = async (e) => {
+    e.preventDefault();
+    if (validateRegister()) {
+      try {
+        const response = await fetch('http://localhost:3001/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...registerData, role: 'user' }) // Always send role as 'user'
+        });
+        const data = await response.json();
+        if (response.ok) {
+          toast.success('Registration successful!');
+          setRegisterData({
+            name: '',
+            email: '',
+            phone: '',
+            semester: semesters[0],
+            password: ''
+          }); // Clear registration form
+          setActiveTab('login');
+        } else {
+          toast.error(data.message || 'Registration failed');
+        }
+      } catch (error) {
+        toast.error('Network error. Please try again.');
+      }
+    }
+  };
+
+  const checkEmailExists = async (email) => {
+    if (!validateEmail(email)) return; // Only check valid emails
+    try {
+      const response = await fetch('http://localhost:3001/validate-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await response.json();
+      if (data.exists) {
+        toast.error(data.message || 'Email already registered');
+        setErrors(prev => ({ ...prev, email: data.message || 'Email already registered' }));
+      } else {
+        toast.success('Email is available');
+        setErrors(prev => ({ ...prev, email: '' }));
+      }
+    } catch (error) {
+      toast.error('Error validating email');
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-lg shadow-md">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            {isSignIn ? 'Sign in to your account' : 'Create a new account'}
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            {isSignIn ? "Don't have an account? " : 'Already have an account? '}
+    <div className="min-h-screen bg-gray-50">
+      {/* <Layout/> */}
+      <Navbar />
+      <div className="flex items-center justify-center py-12 px-4">
+        <ToastContainer position="top-right" autoClose={2000} />
+        <div className="max-w-xl w-full bg-white p-8 rounded-lg shadow-md">
+          <div className="flex mb-8">
             <button
-              onClick={() => {
-                setIsSignIn(!isSignIn);
-                setErrors({});
-              }}
-              className="font-medium text-blue-600 hover:text-blue-500 focus:outline-none"
+              className={`flex-1 py-2 rounded-t-lg font-semibold ${activeTab === 'login' ? 'bg-white text-blue-600 shadow-sm' : 'bg-gray-200 text-gray-600'}`}
+              onClick={() => { setActiveTab('login'); setErrors({}); }}
             >
-              {isSignIn ? 'Sign up' : 'Sign in'}
+              Login
             </button>
-          </p>
-        </div>
-        
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {!isSignIn && (
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Full Name
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                value={formData.name}
-                onChange={handleChange}
-                className={`mt-1 block w-full px-3 py-2 border ${errors.name ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
-                placeholder="John Doe"
-              />
-              {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
-            </div>
-          )}
-          
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-              Email address
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              value={formData.email}
-              onChange={handleChange}
-              className={`mt-1 block w-full px-3 py-2 border ${errors.email ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
-              placeholder="you@example.com"
-            />
-            {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+            <button
+              className={`flex-1 py-2 rounded-t-lg font-semibold ${activeTab === 'register' ? 'bg-white text-blue-600 shadow-sm' : 'bg-gray-200 text-gray-600'}`}
+              onClick={() => { setActiveTab('register'); setErrors({}); }}
+            >
+              Register
+            </button>
           </div>
-          
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete={isSignIn ? 'current-password' : 'new-password'}
-              value={formData.password}
-              onChange={handleChange}
-              className={`mt-1 block w-full px-3 py-2 border ${errors.password ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
-              placeholder="••••••••"
-            />
-            {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
-          </div>
-          
-          {!isSignIn && (
+
+          {/* Login Form */}
+          {activeTab === 'login' && (
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirm Password
-              </label>
-              <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                className={`mt-1 block w-full px-3 py-2 border ${errors.confirmPassword ? 'border-red-300' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500`}
-                placeholder="••••••••"
-              />
-              {errors.confirmPassword && <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>}
+              <h2 className="text-2xl font-bold text-gray-800 mb-6">Login to your account</h2>
+              <form className="space-y-6" onSubmit={handleLoginSubmit}>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="login-email">Email address</label>
+                  <input
+                    id="login-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    className="mt-1 w-full px-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
+                    placeholder="you@example.com"
+                    value={loginData.email}
+                    onChange={e => handleChange(e, 'login')}
+                    required
+                  />
+                  {errors.email && <p className="text-sm text-red-600 mt-1">{errors.email}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="login-password">Password</label>
+                  <input
+                    id="login-password"
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    className="mt-1 w-full px-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
+                    placeholder="••••••••"
+                    value={loginData.password}
+                    onChange={e => handleChange(e, 'login')}
+                    required
+                  />
+                  {errors.password && <p className="text-sm text-red-600 mt-1">{errors.password}</p>}
+                </div>
+                <button
+                  type="submit"
+                  className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm"
+                >
+                  Login
+                </button>
+              </form>
             </div>
           )}
 
-          <div>
-            <button
-              type="submit"
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              {isSignIn ? 'Sign in' : 'Sign up'}
-            </button>
-          </div>
-        </form>
-        
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with</span>
-            </div>
-          </div>
-
-          <div className="mt-6 grid grid-cols-2 gap-3">
+          {/* Register Form */}
+          {activeTab === 'register' && (
             <div>
-              <button
-                type="button"
-                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-              >
-                <span className="sr-only">Sign in with Google</span>
-                <svg className="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
-                </svg>
-              </button>
+              <h2 className="text-2xl font-bold text-gray-800 mb-6">Create an account</h2>
+              <form className="space-y-4" onSubmit={handleRegisterSubmit}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700" htmlFor="name">Name</label>
+                    <input
+                      id="name"
+                      name="name"
+                      type="text"
+                      className="mt-1 w-full px-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
+                      value={registerData.name}
+                      onChange={e => handleChange(e, 'register')}
+                      required
+                    />
+                    {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700" htmlFor="email">Email</label>
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      className="mt-1 w-full px-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
+                      value={registerData.email}
+                      onChange={e => handleChange(e, 'register')}
+                      onBlur={e => checkEmailExists(e.target.value)} // Add this line
+                      required
+                    />
+                    {errors.email && <p className="text-sm text-red-600 mt-1">{errors.email}</p>}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="phone">Phone</label>
+                  <input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    className="mt-1 w-full px-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
+                    value={registerData.phone}
+                    onChange={e => handleChange(e, 'register')}
+                    required
+                  />
+                  {errors.phone && <p className="text-sm text-red-600 mt-1">{errors.phone}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="semester">Semester</label>
+                  <select
+                    id="semester"
+                    name="semester"
+                    className="mt-1 w-full px-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
+                    value={registerData.semester}
+                    onChange={e => handleChange(e, 'register')}
+                    required
+                  >
+                    {semesters.map(sem => (
+                      <option key={sem} value={sem}>{sem}</option>
+                    ))}
+                  </select>
+                  {errors.semester && <p className="text-sm text-red-600 mt-1">{errors.semester}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700" htmlFor="register-password">Password</label>
+                  <input
+                    id="register-password"
+                    name="password"
+                    type="password"
+                    className="mt-1 w-full px-4 py-3 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
+                    value={registerData.password}
+                    onChange={e => handleChange(e, 'register')}
+                    required
+                  />
+                  {errors.password && <p className="text-sm text-red-600 mt-1">{errors.password}</p>}
+                </div>
+                <button
+                  type="submit"
+                  className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-sm"
+                >
+                  Register
+                </button>
+              </form>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

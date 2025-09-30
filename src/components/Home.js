@@ -1,12 +1,16 @@
 import React from "react";
 
+
 const Home = () => {
   return (
+
     <div
+  
       className="relative flex size-full min-h-screen flex-col overflow-x-hidden bg-slate-50 font-sans"
       style={{ fontFamily: 'Inter, "Noto Sans", sans-serif' }}
     >
       <div className="flex h-full grow flex-col">
+             {/* <Navbar/> */}
         {/* Headereeeee */}
         {/* <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#e7eef4] px-10 py-4 shadow-sm">
           <div className="flex items-center gap-3 text-[#0d151c]">
@@ -48,10 +52,10 @@ const Home = () => {
           >
             <div className="container mx-auto px-4 text-center">
               <h1 className="text-4xl font-black leading-tight tracking-tight md:text-6xl">
-                Welcome to the Mohandas Engineering College
+                Welcome to MASTEC
               </h1>
               <p className="mt-4 max-w-3xl mx-auto text-lg font-light md:text-xl">
-                Explore our world-class programs, vibrant campus life, and discover your path to success.
+            
               </p>
               <button className="mt-8 flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-md h-12 px-6 bg-[#0d8bf2] text-slate-50 text-base font-bold leading-normal tracking-[0.015em] hover:bg-[#0b78d4] transition-colors mx-auto">
                 <span className="truncate">Explore Programs</span>
@@ -86,7 +90,7 @@ const Home = () => {
           {/* Student Success Stories */}
           <section className="py-20 bg-slate-50">
             <div className="container mx-auto px-4">
-              <h2 className="text-3xl font-bold text-[#0d151c] text-center mb-12">Student Success Stories</h2>
+              <h2 className="text-3xl font-bold text-[#0d151c] text-center mb-12">Students Achievements</h2>
               <div className="grid md:grid-cols-3 gap-8">
                 <div className="flex flex-col gap-4 rounded-lg overflow-hidden shadow-md bg-white">
                   <div
@@ -222,19 +226,7 @@ const Home = () => {
             </div>
           </section>
           {/* CTA */}
-          <section className="py-20 bg-white">
-            <div className="container mx-auto px-4 text-center">
-              <h2 className="text-3xl font-bold text-[#0d151c] md:text-4xl">Ready to Apply?</h2>
-              <p className="mt-4 max-w-2xl mx-auto text-[#49779c]">
-                Take the next step towards your future. Our application process is simple and straightforward.
-              </p>
-              <div className="mt-8 flex justify-center">
-                <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-md h-12 px-6 bg-[#0d8bf2] text-slate-50 text-base font-bold leading-normal tracking-[0.015em] hover:bg-[#0b78d4] transition-colors">
-                  <span className="truncate">Start Your Application</span>
-                </button>
-              </div>
-            </div>
-          </section>
+                    
         </main>
         {/* Footer */}
         <footer className="bg-[#0d151c] text-white">

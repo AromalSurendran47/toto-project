@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const AuthModal = ({ isOpen, onClose }) => {
@@ -8,6 +8,7 @@ const AuthModal = ({ isOpen, onClose }) => {
     email: '',
     password: ''
   });
+  const navigate = useNavigate(); // Add this line
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -19,8 +20,21 @@ const AuthModal = ({ isOpen, onClose }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle form submission here
+
+    // Simulate login logic
     console.log('Form submitted:', formData);
+
+    // Example: if email contains "admin", set as admin
+    const role = formData.email.includes('admin') ? 'admin' : 'user';
+
+    localStorage.setItem('role', role);
+    localStorage.setItem('isLoggedIn', 'true');
+
+    if (role === 'admin') {
+      navigate('/admin'); // Route to /admin if admin
+    }
+
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -107,12 +121,31 @@ const AuthModal = ({ isOpen, onClose }) => {
 const Layout = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState('');
+
+  useEffect(() => {
+    setIsLoggedIn(localStorage.getItem('isLoggedIn') === 'true');
+    setUserRole(localStorage.getItem('role') || 'user'); // Default to 'user' if not set
+  }, [location]);
+
+ const handleLogout = () => {
+  localStorage.removeItem('isLoggedIn');
+  localStorage.removeItem('userRole');
+  localStorage.removeItem('userEmail');
+  localStorage.removeItem('userName');
+
+  setIsLoggedIn(false);
+  setUserRole('');
+  navigate('/signup');
+};
+
+
   const navLinks = [
     { path: '/', label: 'Home' },
     { path: '/quiz', label: 'Quiz' },
     { path: '/dashboard', label: 'Dashboard' },
-    { path: '/admin', label: 'Admin' },
+    // Admin link will be conditionally rendered below
   ];
 
   return (
@@ -126,7 +159,7 @@ const Layout = ({ children }) => {
                 <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xl">
                   M
                 </div>
-                <span className="ml-3 text-xl font-bold text-gray-800">Mohandas</span>
+                <span className="ml-3 text-xl font-bold text-gray-800">MASTEC</span>
               </div>
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                 {navLinks.map((link) => (
@@ -142,21 +175,36 @@ const Layout = ({ children }) => {
                     {link.label}
                   </Link>
                 ))}
+                {userRole === 'admin' && (
+                  <Link
+                    to="/admin"
+                    className={`${
+                      location.pathname === '/admin'
+                        ? 'border-blue-500 text-gray-900'
+                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                    } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium`}
+                  >
+                    Admin
+                  </Link>
+                )}
               </div>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:items-center space-x-4">
-              <button 
-                onClick={() => navigate('/signup')}
-                className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Sign Up
-              </button>
-              {/* <button 
-                onClick={() => navigate('/signin')}
-                className="px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Sign In
-              </button> */}
+              {!isLoggedIn ? (
+                <button 
+                  onClick={() => navigate('/signup')}
+                  className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Sign Up
+                </button>
+              ) : (
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Logout
+                </button>
+              )}
             </div>
           </div>
         </div>
