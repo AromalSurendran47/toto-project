@@ -103,7 +103,7 @@ function Admin() {
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { icon: '👥', label: 'Add User' },
+                { icon: '👥', label: 'Add  Event', onClick: () => setShowEventForm(true) },
                 { icon: '📚', label: 'Create Course' },
                 { icon: '📊', label: 'View event', onClick: handleViewEvents },
                 { icon: '⚙️', label: 'Settings' },
@@ -159,79 +159,87 @@ function Admin() {
           </div>
 
           {/* Add Event Button */}
-          <div className="mb-8">
+          {/* <div className="mb-8">
             <button
               className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700"
               onClick={() => setShowEventForm(!showEventForm)}
             >
-              Add Event
+              Add Eventwwww
             </button>
-          </div>
+          </div> */}
 
-          {/* Event Form */}
+          {/* Event Form Modal */}
           {showEventForm && (
-            <form className="bg-white p-6 rounded-lg shadow-md mb-8" onSubmit={handleEventSubmit}>
-              <h2 className="text-lg font-semibold mb-4">Create Event</h2>
-              <div className="mb-4">
-                <label className="block text-gray-700">Title</label>
-                <input
-                  type="text"
-                  name="title"
-                  value={eventData.title}
-                  onChange={handleEventChange}
-                  className="w-full border px-3 py-2 rounded"
-                  required
-                />
+            <div className="fixed inset-0 z-40 flex items-center justify-center">
+              <div className="absolute inset-0 bg-black bg-opacity-40" onClick={() => setShowEventForm(false)}></div>
+              <div className="relative z-50 w-full max-w-lg bg-white rounded-lg shadow-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Create Event</h3>
+                  <button className="text-gray-500 hover:text-gray-700" onClick={() => setShowEventForm(false)}>✕</button>
+                </div>
+                <form onSubmit={handleEventSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-1">Title</label>
+                    <input
+                      type="text"
+                      name="title"
+                      value={eventData.title}
+                      onChange={handleEventChange}
+                      className="w-full border px-3 py-2 rounded"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-1">Description</label>
+                    <textarea
+                      name="description"
+                      value={eventData.description}
+                      onChange={handleEventChange}
+                      className="w-full border px-3 py-2 rounded"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm text-gray-700 mb-1">Date</label>
+                      <input
+                        type="date"
+                        name="date"
+                        value={eventData.date}
+                        onChange={handleEventChange}
+                        className="w-full border px-3 py-2 rounded"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-700 mb-1">Time</label>
+                      <input
+                        type="time"
+                        name="time"
+                        value={eventData.time}
+                        onChange={handleEventChange}
+                        className="w-full border px-3 py-2 rounded"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-1">Venue</label>
+                    <input
+                      type="text"
+                      name="venue"
+                      value={eventData.venue}
+                      onChange={handleEventChange}
+                      className="w-full border px-3 py-2 rounded"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button type="button" className="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50" onClick={() => setShowEventForm(false)}>Cancel</button>
+                    <button type="submit" className="px-4 py-2 rounded text-white bg-green-600 hover:bg-green-700">Submit Event</button>
+                  </div>
+                  {message && <p className="text-sm mt-2 {response}`">{message}</p>}
+                </form>
               </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Description</label>
-                <textarea
-                  name="description"
-                  value={eventData.description}
-                  onChange={handleEventChange}
-                  className="w-full border px-3 py-2 rounded"
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Date</label>
-                <input
-                  type="date"
-                  name="date"
-                  value={eventData.date}
-                  onChange={handleEventChange}
-                  className="w-full border px-3 py-2 rounded"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Time</label>
-                <input
-                  type="time"
-                  name="time"
-                  value={eventData.time}
-                  onChange={handleEventChange}
-                  className="w-full border px-3 py-2 rounded"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Venue</label>
-                <input
-                  type="text"
-                  name="venue"
-                  value={eventData.venue}
-                  onChange={handleEventChange}
-                  className="w-full border px-3 py-2 rounded"
-                />
-              </div>
-              <button
-                type="submit"
-                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-              >
-                Submit Event
-              </button>
-              {message && <p className="mt-4 text-red-600">{message}</p>}
-            </form>
+            </div>
           )}
         </div>
       </main>

@@ -1,7 +1,36 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 
 const Home = () => {
+  const [events, setEvents] = useState([]);
+  const [loadingEvents, setLoadingEvents] = useState(true);
+  const [eventsError, setEventsError] = useState("");
+  const [eventsPage, setEventsPage] = useState(0);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const res = await fetch("http://localhost:3001/events");
+        if (!res.ok) throw new Error("Failed to fetch events");
+        const data = await res.json();
+        setEvents(Array.isArray(data) ? data : []);
+      } catch (e) {
+        setEventsError(e.message || "Error fetching events");
+      } finally {
+        setLoadingEvents(false);
+      }
+    };
+    fetchEvents();
+  }, []);
+
+  const EVENTS_PAGE_SIZE = 3;
+  const totalEventPages = Math.max(1, Math.ceil(events.length / EVENTS_PAGE_SIZE));
+  const startIdx = eventsPage * EVENTS_PAGE_SIZE;
+  const visibleEvents = events.slice(startIdx, startIdx + EVENTS_PAGE_SIZE);
+  const canPrev = eventsPage > 0;
+  const canNext = eventsPage < totalEventPages - 1;
+  const goPrev = () => setEventsPage((p) => Math.max(0, p - 1));
+  const goNext = () => setEventsPage((p) => Math.min(totalEventPages - 1, p + 1));
   return (
 
     <div
@@ -161,21 +190,55 @@ const Home = () => {
                 <div>
                   <h2 className="text-3xl font-bold text-[#0d151c] mb-6">Upcoming Events</h2>
                   <div className="space-y-6">
-                    <div className="flex items-start gap-4 p-4 rounded-lg hover:bg-slate-50 transition-colors">
-                      <div
-                        className="flex-shrink-0 w-24 h-24 bg-cover bg-center rounded-md"
-                        style={{
-                          backgroundImage:
-                            'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDC-UscW0fKQdoHDHQCVL965BY9UZJtDwmv-mTXl119arYf_gKsaQgztsxzOXU2RFzEro_0FhiN2igAeFtch4a3ADqCuMXt70Url9UFxJkMnggfS5yDZjtbP5C3eew8hKTG2Q7uBJhlos6Hc4xtyNEnrnqWIax15ofZ0mTz5Km-Tc4YlIk-PelnSQnzBzu9-N8rhcZxRc8y_CLQaLv-AfJZ8dVqC_FgEk26DVtgm1K35nr0BVfYLRBLboNysYjnqFky3VMfhliykmM")',
-                        }}
-                      ></div>
-                      <div>
-                        <p className="text-[#0d151c] text-lg font-bold">Campus Open Day</p>
-                        <p className="text-[#49779c] text-sm mt-1">
-                          Join us for our annual Open Day to tour the campus, meet faculty, and learn about our programs.
-                        </p>
+                    {loadingEvents && (
+                      <div className="p-4 text-[#49779c]">Loading events...</div>
+                    )}
+                    {!loadingEvents && eventsError && (
+                      <div className="p-4 text-red-600">{eventsError}</div>
+                    )}
+                    {!loadingEvents && !eventsError && events.length === 0 && (
+                      <div className="p-4 text-[#49779c]">No upcoming events.</div>
+                    )}
+                    {!loadingEvents && !eventsError && visibleEvents.map((event) => (
+                      <div key={event._id} className="flex items-start gap-4 p-4 rounded-lg hover:bg-slate-50 transition-colors">
+                        <div className="flex-shrink-0 w-24 h-24 bg-blue-50 text-blue-700 rounded-md flex items-center justify-center text-center px-2">
+                          <div>
+                            <div className="text-sm font-semibold">
+                              {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </div>
+                            <div className="text-xs">{event.time || '-'}</div>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-[#0d151c] text-lg font-bold">{event.title}</p>
+                          {event.description && (
+                            <p className="text-[#49779c] text-sm mt-1">{event.description}</p>
+                          )}
+                          <p className="text-[#49779c] text-sm mt-1">{event.venue || '-'}</p>
+                        </div>
                       </div>
-                    </div>
+                    ))}
+                    {!loadingEvents && !eventsError && events.length > 0 && (
+                      <div className="flex items-center justify-between pt-2">
+                        <button
+                          onClick={goPrev}
+                          disabled={!canPrev}
+                          className={`px-3 py-1.5 rounded border text-sm ${canPrev ? 'text-[#0d151c] border-slate-300 hover:bg-slate-100' : 'text-slate-400 border-slate-200 cursor-not-allowed'}`}
+                        >
+                          ← Previous
+                        </button>
+                        <div className="text-sm text-[#49779c]">
+                          Page {eventsPage + 1} of {totalEventPages}
+                        </div>
+                        <button
+                          onClick={goNext}
+                          disabled={!canNext}
+                          className={`px-3 py-1.5 rounded border text-sm ${canNext ? 'text-[#0d151c] border-slate-300 hover:bg-slate-100' : 'text-slate-400 border-slate-200 cursor-not-allowed'}`}
+                        >
+                          Next →
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
