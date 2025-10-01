@@ -3,6 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 
 function Admin() {
   const [showEventForm, setShowEventForm] = useState(false);
+  const [showRegistrations, setShowRegistrations] = useState(false);
+  const [registrations, setRegistrations] = useState([]);
+  const [registrationsLoading, setRegistrationsLoading] = useState(false);
+  const [registrationsError, setRegistrationsError] = useState('');
   const [eventData, setEventData] = useState({
     title: '',
     description: '',
@@ -46,6 +50,25 @@ function Admin() {
 
   const handleViewEvents = () => {
     navigate('/events');
+  };
+
+  const handleViewRegistrations = async () => {
+    setRegistrationsError('');
+    setRegistrationsLoading(true);
+    try {
+      const res = await fetch('http://localhost:3001/event-registrations');
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.message || 'Failed to fetch registrations');
+      }
+      setRegistrations(Array.isArray(data) ? data : []);
+      setShowRegistrations(true);
+    } catch (err) {
+      setRegistrationsError(err.message || 'Error fetching registrations');
+      setShowRegistrations(true);
+    } finally {
+      setRegistrationsLoading(false);
+    }
   };
 
   return (
@@ -104,7 +127,7 @@ function Admin() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 { icon: '👥', label: 'Add  Event', onClick: () => setShowEventForm(true) },
-                { icon: '📚', label: 'Create Course' },
+                { icon: '📚', label: 'Event Registration Details', onClick: handleViewRegistrations },
                 { icon: '📊', label: 'View event', onClick: handleViewEvents },
                 { icon: '⚙️', label: 'Settings' },
               ].map((action, index) => (
@@ -238,6 +261,57 @@ function Admin() {
                   </div>
                   {message && <p className="text-sm mt-2 {response}`">{message}</p>}
                 </form>
+              </div>
+            </div>
+          )}
+
+          {/* Registrations Modal */}
+          {showRegistrations && (
+            <div className="fixed inset-0 z-40 flex items-center justify-center">
+              <div className="absolute inset-0 bg-black bg-opacity-40" onClick={() => setShowRegistrations(false)}></div>
+              <div className="relative z-50 w-full max-w-4xl bg-white rounded-lg shadow-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Event Registration Details</h3>
+                  <button className="text-gray-500 hover:text-gray-700" onClick={() => setShowRegistrations(false)}>✕</button>
+                </div>
+                {registrationsLoading ? (
+                  <p className="text-sm text-gray-600">Loading...</p>
+                ) : registrationsError ? (
+                  <p className="text-sm text-red-600">{registrationsError}</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead>
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Semester</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registered At</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {registrations.length === 0 ? (
+                          <tr>
+                            <td className="px-4 py-3 text-sm text-gray-500" colSpan={6}>No registrations found.</td>
+                          </tr>
+                        ) : (
+                          registrations.map((r) => (
+                            <tr key={r._id} className="hover:bg-gray-50">
+                              <td className="px-4 py-3 text-sm text-gray-900">{r?.event?.title || '-'}</td>
+                              <td className="px-4 py-3 text-sm text-gray-700">{r?.user?.name || '-'}</td>
+                              <td className="px-4 py-3 text-sm text-gray-700">{r?.user?.email || '-'}</td>
+                              <td className="px-4 py-3 text-sm text-gray-700">{r?.user?.phone || '-'}</td>
+                              <td className="px-4 py-3 text-sm text-gray-700">{r?.user?.semester || '-'}</td>
+                              <td className="px-4 py-3 text-sm text-gray-500">{r?.registeredAt ? new Date(r.registeredAt).toLocaleString() : '-'}</td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </div>
           )}
