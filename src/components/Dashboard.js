@@ -4,10 +4,15 @@ import { Link } from 'react-router-dom';
 function Dashboard() {
   const [events, setEvents] = useState([]);
   const [showEvents, setShowEvents] = useState(false);
+  const [userName, setUserName] = useState('Student');
 
   // Fetch events when dashboard loads
   React.useEffect(() => {
     fetchEvents();
+    const storedName = localStorage.getItem('userName');
+    if (storedName && typeof storedName === 'string' && storedName.trim().length > 0) {
+      setUserName(storedName);
+    }
   }, []);
 
   const fetchEvents = async () => {
@@ -57,7 +62,7 @@ function Dashboard() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Welcome back, Student!</h1>
+              <h1 className="text-3xl font-bold text-gray-900">Welcome back, {userName}!</h1>
               <p className="text-gray-500 mt-1">Here's what's happening with your courses today.</p>
             </div>
             <button className="mt-4 md:mt-0 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
