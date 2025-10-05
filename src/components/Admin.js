@@ -15,6 +15,14 @@ function Admin() {
     venue: ''
   });
   const [message, setMessage] = useState('');
+  const [showQuizzes, setShowQuizzes] = useState(false);
+  const [quizzes, setQuizzes] = useState([]);
+  const [showQuizResults, setShowQuizResults] = useState(false);
+  const [quizAttempts, setQuizAttempts] = useState([]);
+  const [loadingQuizzes, setLoadingQuizzes] = useState(false);
+  const [loadingAttempts, setLoadingAttempts] = useState(false);
+  const [errorQuizzes, setErrorQuizzes] = useState('');
+  const [errorAttempts, setErrorAttempts] = useState('');
   const navigate = useNavigate();
 
   const handleEventChange = (e) => {
@@ -50,6 +58,40 @@ function Admin() {
 
   const handleViewEvents = () => {
     navigate('/events');
+  };
+
+  const handleViewAllQuizzes = async () => {
+    setErrorQuizzes('');
+    setLoadingQuizzes(true);
+    try {
+      const res = await fetch('http://localhost:3001/quizzes');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.message || 'Failed to fetch quizzes');
+      setQuizzes(Array.isArray(data) ? data : []);
+      setShowQuizzes(true);
+    } catch (e) {
+      setErrorQuizzes(e.message || 'Error fetching quizzes');
+      setShowQuizzes(true);
+    } finally {
+      setLoadingQuizzes(false);
+    }
+  };
+
+  const handleViewQuizResults = async () => {
+    setErrorAttempts('');
+    setLoadingAttempts(true);
+    try {
+      const res = await fetch('http://localhost:3001/quiz-attempts');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.message || 'Failed to fetch attempts');
+      setQuizAttempts(Array.isArray(data) ? data : []);
+      setShowQuizResults(true);
+    } catch (e) {
+      setErrorAttempts(e.message || 'Error fetching attempts');
+      setShowQuizResults(true);
+    } finally {
+      setLoadingAttempts(false);
+    }
   };
 
   const handleViewRegistrations = async () => {
@@ -107,7 +149,7 @@ function Admin() {
               { title: 'Total Students', value: '1,234', change: '+12%', trend: 'up' },
               { title: 'Active Courses', value: '24', change: '+3', trend: 'up' },
               { title: 'Pending Requests', value: '8', change: '-2', trend: 'down' },
-              { title: 'System Health', value: '98%', change: '2%', trend: 'up' },
+              { title: 'Add Quiz'},
             ].map((stat, index) => (
               <div key={index} className="bg-white p-6 rounded-lg shadow-md">
                 <p className="text-sm font-medium text-gray-500">{stat.title}</p>
@@ -128,8 +170,10 @@ function Admin() {
               {[
                 { icon: '👥', label: 'Add  Event', onClick: () => setShowEventForm(true) },
                 { icon: '📚', label: 'Event Registration Details', onClick: handleViewRegistrations },
-                { icon: '📊', label: 'View event', onClick: handleViewEvents },
-                { icon: '⚙️', label: 'Settings' },
+                { icon: '📊', label: 'View Events', onClick: handleViewEvents },
+                { icon: '📝', label: 'Create Quiz', onClick: () => navigate('/quiz') },
+                { icon: '📄', label: 'View All Quizzes', onClick: handleViewAllQuizzes },
+                { icon: '📈', label: 'Quiz Results', onClick: handleViewQuizResults },
               ].map((action, index) => (
                 <button
                   key={index}
@@ -264,6 +308,107 @@ function Admin() {
               </div>
             </div>
           )}
+
+        {/* All Quizzes Modal */}
+        {showQuizzes && (
+          <div className="fixed inset-0 z-40 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black bg-opacity-40" onClick={() => setShowQuizzes(false)}></div>
+            <div className="relative z-50 w-full max-w-3xl bg-white rounded-lg shadow-lg p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">All Quizzes</h3>
+                <button className="text-gray-500 hover:text-gray-700" onClick={() => setShowQuizzes(false)}>✕</button>
+              </div>
+              {loadingQuizzes ? (
+                <p className="text-sm text-gray-600">Loading...</p>
+              ) : errorQuizzes ? (
+                <p className="text-sm text-red-600">{errorQuizzes}</p>
+              ) : quizzes.length === 0 ? (
+                <div className="text-sm text-gray-500">No quizzes found.</div>
+              ) : (
+                <div className="space-y-6 max-h-[70vh] overflow-auto pr-2">
+                  {quizzes.map((q) => (
+                    <div key={q._id} className="border border-gray-200 rounded-lg">
+                      <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-semibold text-gray-900">{q.title}</p>
+                          <p className="text-xs text-gray-500 mt-1">Total Marks: {q.totalMarks} · Questions: {q.questions?.length || 0} · {q.createdAt ? new Date(q.createdAt).toLocaleString() : '-'}</p>
+                        </div>
+                      </div>
+                      <div className="p-4">
+                        {(q.questions || []).map((que, qi) => (
+                          <div key={qi} className="mb-4 last:mb-0">
+                            <p className="text-sm font-medium text-gray-900 mb-2">Q{qi + 1}. {que.text}</p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              {(que.options || []).map((opt, oi) => (
+                                <div
+                                  key={oi}
+                                  className={`text-sm px-3 py-2 rounded border ${que.correctAnswer === oi ? 'bg-green-50 border-green-300 text-green-800' : 'bg-white border-gray-200 text-gray-700'}`}
+                                >
+                                  {String.fromCharCode(65 + oi)}. {opt}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Quiz Results Modal */}
+        {showQuizResults && (
+          <div className="fixed inset-0 z-40 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black bg-opacity-40" onClick={() => setShowQuizResults(false)}></div>
+            <div className="relative z-50 w-full max-w-5xl bg-white rounded-lg shadow-lg p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Quiz Results</h3>
+                <button className="text-gray-500 hover:text-gray-700" onClick={() => setShowQuizResults(false)}>✕</button>
+              </div>
+              {loadingAttempts ? (
+                <p className="text-sm text-gray-600">Loading...</p>
+              ) : errorAttempts ? (
+                <p className="text-sm text-red-600">{errorAttempts}</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead>
+                      <tr>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quiz</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Correct</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {quizAttempts.length === 0 ? (
+                        <tr>
+                          <td className="px-4 py-3 text-sm text-gray-500" colSpan={6}>No attempts found.</td>
+                        </tr>
+                      ) : (
+                        quizAttempts.map((a) => (
+                          <tr key={a._id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 text-sm text-gray-900">{a?.quiz?.title || '-'}</td>
+                            <td className="px-4 py-3 text-sm text-gray-700">{a?.student?.name || '-'}</td>
+                            <td className="px-4 py-3 text-sm text-gray-700">{a?.student?.email || '-'}</td>
+                            <td className="px-4 py-3 text-sm text-gray-700">{a?.score} / {a?.quiz?.totalMarks ?? '-'}</td>
+                            <td className="px-4 py-3 text-sm text-gray-700">{a?.numCorrect}</td>
+                            <td className="px-4 py-3 text-sm text-gray-500">{a?.submittedAt ? new Date(a.submittedAt).toLocaleString() : '-'}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
           {/* Registrations Modal */}
           {showRegistrations && (
