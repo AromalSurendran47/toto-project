@@ -5,13 +5,32 @@ function Dashboard() {
   const [events, setEvents] = useState([]);
   const [showEvents, setShowEvents] = useState(false);
   const [userName, setUserName] = useState('Student');
+  const [userId, setUserId] = useState('');
+  const [userRole, setUserRole] = useState('user');
+  const [quizzes, setQuizzes] = useState([]);
+  const [takingQuiz, setTakingQuiz] = useState(false);
+  const [takeQuizData, setTakeQuizData] = useState(null);
+  const [answers, setAnswers] = useState([]);
+  const [checkedMap, setCheckedMap] = useState({}); // { [qIndex]: { selectedIndex, correctIndex, correct } }
+  const [takingQuizLoading, setTakingQuizLoading] = useState(false);
+  const [takeResult, setTakeResult] = useState(null);
 
   // Fetch events when dashboard loads
   React.useEffect(() => {
     fetchEvents();
+    fetchQuizzes();
     const storedName = localStorage.getItem('userName');
     if (storedName && typeof storedName === 'string' && storedName.trim().length > 0) {
       setUserName(storedName);
+    }
+    const storedUserId = localStorage.getItem('userId');
+    if (storedUserId) setUserId(storedUserId);
+    const storedRole = localStorage.getItem('role');
+    if (storedRole) setUserRole(storedRole);
+    const storedEmail = localStorage.getItem('email');
+    if (storedEmail) {
+      // Normalize email to avoid stray spaces
+      refreshUserFromEmail(String(storedEmail).trim());
     }
   }, []);
 
@@ -27,6 +46,109 @@ function Dashboard() {
 
   const handleViewEvents = async () => {
     setShowEvents(true);
+  };
+
+  const fetchQuizzes = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/quizzes');
+      const data = await response.json();
+      setQuizzes(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error fetching quizzes:', error);
+    }
+  };
+
+  const startTakeQuiz = async (quizId) => {
+    if (!userId) {
+      alert('Please log in to take the quiz.');
+      return;
+    }
+    setTakingQuizLoading(true);
+    try {
+      const res = await fetch(`http://localhost:3001/quizzes/${quizId}/take?studentId=${userId}`);
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.message || 'Unable to start quiz');
+        setTakingQuizLoading(false);
+        return;
+      }
+      setTakeQuizData(data);
+      setAnswers(new Array(data.questions.length).fill(-1));
+      setCheckedMap({});
+      setTakingQuiz(true);
+      setTakeResult(null);
+    } catch (e) {
+      alert('Error loading quiz');
+    } finally {
+      setTakingQuizLoading(false);
+    }
+  };
+
+  const refreshUserFromEmail = async (email) => {
+    try {
+      const res = await fetch(`http://localhost:3001/users/by-email?email=${encodeURIComponent(email)}`);
+      const data = await res.json();
+      if (res.ok && data && data.userId) {
+        setUserId(data.userId);
+        setUserRole(data.role || 'user');
+        // keep localStorage aligned for future sessions
+        localStorage.setItem('userId', data.userId);
+        if (data.role) localStorage.setItem('role', data.role);
+      }
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to refresh user by email', e);
+    }
+  };
+
+  const setAnswer = (qIndex, optionIndex) => {
+    const copy = [...answers];
+    copy[qIndex] = optionIndex;
+    setAnswers(copy);
+    // Immediately check answer with backend and update highlight map
+    checkAnswer(qIndex, optionIndex);
+  };
+
+  const checkAnswer = async (qIndex, optionIndex) => {
+    try {
+      const res = await fetch(`http://localhost:3001/quizzes/${takeQuizData._id}/check`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentId: userId, questionIndex: qIndex, selectedIndex: optionIndex })
+      });
+      const data = await res.json();
+      if (!res.ok) return;
+      setCheckedMap((prev) => ({
+        ...prev,
+        [qIndex]: { selectedIndex: optionIndex, correctIndex: data.correctIndex, correct: data.correct }
+      }));
+    } catch (e) {
+      // ignore transient errors
+    }
+  };
+
+  const submitQuiz = async () => {
+    if (!takeQuizData) return;
+    if (answers.some((a) => a === -1)) {
+      alert('Please answer all questions.');
+      return;
+    }
+    try {
+      const res = await fetch(`http://localhost:3001/quizzes/${takeQuizData._id}/attempts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentId: userId, answers })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.message || 'Failed to submit quiz');
+        return;
+      }
+      setTakeResult({ score: data.score, numCorrect: data.numCorrect, totalMarks: data.totalMarks });
+      fetchQuizzes();
+    } catch (e) {
+      alert('Error submitting quiz');
+    }
   };
 
   return (
@@ -177,6 +299,45 @@ function Dashboard() {
 
             {/* Right Sidebar */}
             <div className="space-y-6">
+              {/* Quizzes */}
+              <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900">Quizzes</h2>
+                  {userRole && userRole.toLowerCase() === 'admin' && (
+                    <Link to="/quiz" className="text-sm font-medium text-blue-600 hover:text-blue-800">Create Quiz</Link>
+                  )}
+                </div>
+                <div className="divide-y divide-gray-200">
+                  {quizzes.length === 0 ? (
+                    <div className="p-4 text-gray-500">No quizzes available.</div>
+                  ) : (
+                    quizzes.slice(0, 5).map((qz) => (
+                      <div key={qz._id} className="p-4 hover:bg-gray-50 transition-colors">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{qz.title}</p>
+                            <p className="text-xs text-gray-500 mt-1">Total Marks: {qz.totalMarks} · Questions: {qz.questions?.length || 0}</p>
+                          </div>
+                          {(!userRole || userRole.toLowerCase() !== 'admin') ? (
+                            <button
+                              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                              onClick={() => startTakeQuiz(qz._id)}
+                              disabled={takingQuizLoading}
+                            >
+                              {takingQuizLoading ? 'Loading...' : 'Take Quiz'}
+                            </button>
+                          ) : (
+                            <span className="text-gray-500 text-sm">Admin view</span>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+                <div className="px-6 py-4 bg-gray-50 text-right">
+                  <Link to="/quizzes" className="text-sm font-medium text-blue-600 hover:text-blue-800">View all quizzes →</Link>
+                </div>
+              </div>
               {/* Upcoming Events */}
               <div className="bg-white rounded-lg shadow-md overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-200">
@@ -267,6 +428,67 @@ function Dashboard() {
                 </li>
               ))}
             </ul>
+          </div>
+        </div>
+      )}
+
+      {/* Take Quiz Modal */}
+      {takingQuiz && takeQuizData && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-2xl w-full relative">
+            <button
+              className="absolute top-3 right-4 text-gray-500 hover:text-gray-700"
+              onClick={() => { setTakingQuiz(false); setTakeQuizData(null); setAnswers([]); setTakeResult(null); }}
+            >
+              Close
+            </button>
+            <h2 className="text-lg font-semibold mb-4">{takeQuizData.title}</h2>
+            {takeResult ? (
+              <div className="p-4 bg-green-50 rounded border border-green-200 text-green-800 mb-4">
+                Score: {takeResult.score} / {takeResult.totalMarks} ({takeResult.numCorrect} correct)
+              </div>
+            ) : null}
+            <div className="space-y-6 max-h-[60vh] overflow-auto pr-2">
+              {takeQuizData.questions.map((q, qIndex) => (
+                <div key={qIndex} className="border border-gray-200 rounded-md p-4">
+                  <p className="text-sm font-medium text-gray-900 mb-3">Q{qIndex + 1}. {q.text}</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {q.options.map((opt, oIndex) => {
+                      const check = checkedMap[qIndex];
+                      const isCorrectOption = check && check.correctIndex === oIndex;
+                      const isSelectedWrong = check && !check.correct && check.selectedIndex === oIndex;
+                      const wrapperClass = isCorrectOption
+                        ? 'bg-green-50 border-green-300'
+                        : isSelectedWrong
+                        ? 'bg-red-50 border-red-300'
+                        : 'bg-white border-gray-200';
+                      const textClass = isCorrectOption ? 'text-green-800' : isSelectedWrong ? 'text-red-800' : 'text-gray-700';
+                      return (
+                        <label key={oIndex} className={`flex items-center gap-2 text-sm border rounded px-3 py-2 ${wrapperClass}`}>
+                          <input
+                            type="radio"
+                            name={`q-${qIndex}`}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                            checked={answers[qIndex] === oIndex}
+                            onChange={() => setAnswer(qIndex, oIndex)}
+                          />
+                          <span className={textClass}>{opt}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-6 text-right">
+              <button
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                onClick={submitQuiz}
+                disabled={!!takeResult}
+              >
+                Submit Answers
+              </button>
+            </div>
           </div>
         </div>
       )}
