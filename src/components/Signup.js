@@ -10,7 +10,7 @@ const semesters = ['1st', '2nd', '3rd', '4th'];
 const Signup = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('login');
-  const [loginData, setLoginData] = useState({ email: '', password: '' });
+  const [loginData, setLoginData] = useState({ email: '', password: '' });//
   const [registerData, setRegisterData] = useState({
     name: '',
     email: '',
