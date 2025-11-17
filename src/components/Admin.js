@@ -3,6 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 
 function Admin() {
   const [showEventForm, setShowEventForm] = useState(false);
+  const [showRegistrations, setShowRegistrations] = useState(false);
+  const [registrations, setRegistrations] = useState([]);
+  const [registrationsLoading, setRegistrationsLoading] = useState(false);
+  const [registrationsError, setRegistrationsError] = useState('');
   const [eventData, setEventData] = useState({
     title: '',
     description: '',
@@ -11,6 +15,14 @@ function Admin() {
     venue: ''
   });
   const [message, setMessage] = useState('');
+  const [showQuizzes, setShowQuizzes] = useState(false);
+  const [quizzes, setQuizzes] = useState([]);
+  const [showQuizResults, setShowQuizResults] = useState(false);
+  const [quizAttempts, setQuizAttempts] = useState([]);
+  const [loadingQuizzes, setLoadingQuizzes] = useState(false);
+  const [loadingAttempts, setLoadingAttempts] = useState(false);
+  const [errorQuizzes, setErrorQuizzes] = useState('');
+  const [errorAttempts, setErrorAttempts] = useState('');
   const navigate = useNavigate();
 
   const handleEventChange = (e) => {
@@ -46,6 +58,59 @@ function Admin() {
 
   const handleViewEvents = () => {
     navigate('/events');
+  };
+
+  const handleViewAllQuizzes = async () => {
+    setErrorQuizzes('');
+    setLoadingQuizzes(true);
+    try {
+      const res = await fetch('http://localhost:3001/quizzes');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.message || 'Failed to fetch quizzes');
+      setQuizzes(Array.isArray(data) ? data : []);
+      setShowQuizzes(true);
+    } catch (e) {
+      setErrorQuizzes(e.message || 'Error fetching quizzes');
+      setShowQuizzes(true);
+    } finally {
+      setLoadingQuizzes(false);
+    }
+  };
+
+  const handleViewQuizResults = async () => {
+    setErrorAttempts('');
+    setLoadingAttempts(true);
+    try {
+      const res = await fetch('http://localhost:3001/quiz-attempts');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.message || 'Failed to fetch attempts');
+      setQuizAttempts(Array.isArray(data) ? data : []);
+      setShowQuizResults(true);
+    } catch (e) {
+      setErrorAttempts(e.message || 'Error fetching attempts');
+      setShowQuizResults(true);
+    } finally {
+      setLoadingAttempts(false);
+    }
+  };
+
+  const handleViewRegistrations = async () => {
+    setRegistrationsError('');
+    setRegistrationsLoading(true);
+    try {
+      const res = await fetch('http://localhost:3001/event-registrations');
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.message || 'Failed to fetch registrations');
+      }
+      setRegistrations(Array.isArray(data) ? data : []);
+      setShowRegistrations(true);
+    } catch (err) {
+      setRegistrationsError(err.message || 'Error fetching registrations');
+      setShowRegistrations(true);
+    } finally {
+      setRegistrationsLoading(false);
+    }
   };
 
   return (
@@ -84,7 +149,7 @@ function Admin() {
               { title: 'Total Students', value: '1,234', change: '+12%', trend: 'up' },
               { title: 'Active Courses', value: '24', change: '+3', trend: 'up' },
               { title: 'Pending Requests', value: '8', change: '-2', trend: 'down' },
-              { title: 'System Health', value: '98%', change: '2%', trend: 'up' },
+              { title: 'Add Quiz'},
             ].map((stat, index) => (
               <div key={index} className="bg-white p-6 rounded-lg shadow-md">
                 <p className="text-sm font-medium text-gray-500">{stat.title}</p>
@@ -103,10 +168,12 @@ function Admin() {
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { icon: '👥', label: 'Add User' },
-                { icon: '📚', label: 'Create Course' },
-                { icon: '📊', label: 'View event', onClick: handleViewEvents },
-                { icon: '⚙️', label: 'Settings' },
+                { icon: '👥', label: 'Add  Event', onClick: () => setShowEventForm(true) },
+                { icon: '📚', label: 'Event Registration Details', onClick: handleViewRegistrations },
+                { icon: '📊', label: 'View Events', onClick: handleViewEvents },
+                { icon: '📝', label: 'Create Quiz', onClick: () => navigate('/quiz') },
+                { icon: '📄', label: 'View All Quizzes', onClick: handleViewAllQuizzes },
+                { icon: '📈', label: 'Quiz Results', onClick: handleViewQuizResults },
               ].map((action, index) => (
                 <button
                   key={index}
@@ -159,79 +226,239 @@ function Admin() {
           </div>
 
           {/* Add Event Button */}
-          <div className="mb-8">
+          {/* <div className="mb-8">
             <button
               className="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700"
               onClick={() => setShowEventForm(!showEventForm)}
             >
-              Add Event
+              Add Eventwwww
             </button>
-          </div>
+          </div> */}
 
-          {/* Event Form */}
+          {/* Event Form Modal */}
           {showEventForm && (
-            <form className="bg-white p-6 rounded-lg shadow-md mb-8" onSubmit={handleEventSubmit}>
-              <h2 className="text-lg font-semibold mb-4">Create Event</h2>
-              <div className="mb-4">
-                <label className="block text-gray-700">Title</label>
-                <input
-                  type="text"
-                  name="title"
-                  value={eventData.title}
-                  onChange={handleEventChange}
-                  className="w-full border px-3 py-2 rounded"
-                  required
-                />
+            <div className="fixed inset-0 z-40 flex items-center justify-center">
+              <div className="absolute inset-0 bg-black bg-opacity-40" onClick={() => setShowEventForm(false)}></div>
+              <div className="relative z-50 w-full max-w-lg bg-white rounded-lg shadow-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Create Event</h3>
+                  <button className="text-gray-500 hover:text-gray-700" onClick={() => setShowEventForm(false)}>✕</button>
+                </div>
+                <form onSubmit={handleEventSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-1">Title</label>
+                    <input
+                      type="text"
+                      name="title"
+                      value={eventData.title}
+                      onChange={handleEventChange}
+                      className="w-full border px-3 py-2 rounded"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-1">Description</label>
+                    <textarea
+                      name="description"
+                      value={eventData.description}
+                      onChange={handleEventChange}
+                      className="w-full border px-3 py-2 rounded"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm text-gray-700 mb-1">Date</label>
+                      <input
+                        type="date"
+                        name="date"
+                        value={eventData.date}
+                        onChange={handleEventChange}
+                        className="w-full border px-3 py-2 rounded"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-700 mb-1">Time</label>
+                      <input
+                        type="time"
+                        name="time"
+                        value={eventData.time}
+                        onChange={handleEventChange}
+                        className="w-full border px-3 py-2 rounded"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-1">Venue</label>
+                    <input
+                      type="text"
+                      name="venue"
+                      value={eventData.venue}
+                      onChange={handleEventChange}
+                      className="w-full border px-3 py-2 rounded"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button type="button" className="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50" onClick={() => setShowEventForm(false)}>Cancel</button>
+                    <button type="submit" className="px-4 py-2 rounded text-white bg-green-600 hover:bg-green-700">Submit Event</button>
+                  </div>
+                  {message && <p className="text-sm mt-2 {response}`">{message}</p>}
+                </form>
               </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Description</label>
-                <textarea
-                  name="description"
-                  value={eventData.description}
-                  onChange={handleEventChange}
-                  className="w-full border px-3 py-2 rounded"
-                />
+            </div>
+          )}
+
+        {/* All Quizzes Modal */}
+        {showQuizzes && (
+          <div className="fixed inset-0 z-40 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black bg-opacity-40" onClick={() => setShowQuizzes(false)}></div>
+            <div className="relative z-50 w-full max-w-3xl bg-white rounded-lg shadow-lg p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">All Quizzes</h3>
+                <button className="text-gray-500 hover:text-gray-700" onClick={() => setShowQuizzes(false)}>✕</button>
               </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Date</label>
-                <input
-                  type="date"
-                  name="date"
-                  value={eventData.date}
-                  onChange={handleEventChange}
-                  className="w-full border px-3 py-2 rounded"
-                  required
-                />
+              {loadingQuizzes ? (
+                <p className="text-sm text-gray-600">Loading...</p>
+              ) : errorQuizzes ? (
+                <p className="text-sm text-red-600">{errorQuizzes}</p>
+              ) : quizzes.length === 0 ? (
+                <div className="text-sm text-gray-500">No quizzes found.</div>
+              ) : (
+                <div className="space-y-6 max-h-[70vh] overflow-auto pr-2">
+                  {quizzes.map((q) => (
+                    <div key={q._id} className="border border-gray-200 rounded-lg">
+                      <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-semibold text-gray-900">{q.title}</p>
+                          <p className="text-xs text-gray-500 mt-1">Total Marks: {q.totalMarks} · Questions: {q.questions?.length || 0} · {q.createdAt ? new Date(q.createdAt).toLocaleString() : '-'}</p>
+                        </div>
+                      </div>
+                      <div className="p-4">
+                        {(q.questions || []).map((que, qi) => (
+                          <div key={qi} className="mb-4 last:mb-0">
+                            <p className="text-sm font-medium text-gray-900 mb-2">Q{qi + 1}. {que.text}</p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              {(que.options || []).map((opt, oi) => (
+                                <div
+                                  key={oi}
+                                  className={`text-sm px-3 py-2 rounded border ${que.correctAnswer === oi ? 'bg-green-50 border-green-300 text-green-800' : 'bg-white border-gray-200 text-gray-700'}`}
+                                >
+                                  {String.fromCharCode(65 + oi)}. {opt}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Quiz Results Modal */}
+        {showQuizResults && (
+          <div className="fixed inset-0 z-40 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black bg-opacity-40" onClick={() => setShowQuizResults(false)}></div>
+            <div className="relative z-50 w-full max-w-5xl bg-white rounded-lg shadow-lg p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Quiz Results</h3>
+                <button className="text-gray-500 hover:text-gray-700" onClick={() => setShowQuizResults(false)}>✕</button>
               </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Time</label>
-                <input
-                  type="time"
-                  name="time"
-                  value={eventData.time}
-                  onChange={handleEventChange}
-                  className="w-full border px-3 py-2 rounded"
-                  required
-                />
+              {loadingAttempts ? (
+                <p className="text-sm text-gray-600">Loading...</p>
+              ) : errorAttempts ? (
+                <p className="text-sm text-red-600">{errorAttempts}</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead>
+                      <tr>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quiz</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Correct</th>
+                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {quizAttempts.length === 0 ? (
+                        <tr>
+                          <td className="px-4 py-3 text-sm text-gray-500" colSpan={6}>No attempts found.</td>
+                        </tr>
+                      ) : (
+                        quizAttempts.map((a) => (
+                          <tr key={a._id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 text-sm text-gray-900">{a?.quiz?.title || '-'}</td>
+                            <td className="px-4 py-3 text-sm text-gray-700">{a?.student?.name || '-'}</td>
+                            <td className="px-4 py-3 text-sm text-gray-700">{a?.student?.email || '-'}</td>
+                            <td className="px-4 py-3 text-sm text-gray-700">{a?.score} / {a?.quiz?.totalMarks ?? '-'}</td>
+                            <td className="px-4 py-3 text-sm text-gray-700">{a?.numCorrect}</td>
+                            <td className="px-4 py-3 text-sm text-gray-500">{a?.submittedAt ? new Date(a.submittedAt).toLocaleString() : '-'}</td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+          {/* Registrations Modal */}
+          {showRegistrations && (
+            <div className="fixed inset-0 z-40 flex items-center justify-center">
+              <div className="absolute inset-0 bg-black bg-opacity-40" onClick={() => setShowRegistrations(false)}></div>
+              <div className="relative z-50 w-full max-w-4xl bg-white rounded-lg shadow-lg p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Event Registration Details</h3>
+                  <button className="text-gray-500 hover:text-gray-700" onClick={() => setShowRegistrations(false)}>✕</button>
+                </div>
+                {registrationsLoading ? (
+                  <p className="text-sm text-gray-600">Loading...</p>
+                ) : registrationsError ? (
+                  <p className="text-sm text-red-600">{registrationsError}</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead>
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Semester</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registered At</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {registrations.length === 0 ? (
+                          <tr>
+                            <td className="px-4 py-3 text-sm text-gray-500" colSpan={6}>No registrations found.</td>
+                          </tr>
+                        ) : (
+                          registrations.map((r) => (
+                            <tr key={r._id} className="hover:bg-gray-50">
+                              <td className="px-4 py-3 text-sm text-gray-900">{r?.event?.title || '-'}</td>
+                              <td className="px-4 py-3 text-sm text-gray-700">{r?.user?.name || '-'}</td>
+                              <td className="px-4 py-3 text-sm text-gray-700">{r?.user?.email || '-'}</td>
+                              <td className="px-4 py-3 text-sm text-gray-700">{r?.user?.phone || '-'}</td>
+                              <td className="px-4 py-3 text-sm text-gray-700">{r?.user?.semester || '-'}</td>
+                              <td className="px-4 py-3 text-sm text-gray-500">{r?.registeredAt ? new Date(r.registeredAt).toLocaleString() : '-'}</td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
-              <div className="mb-4">
-                <label className="block text-gray-700">Venue</label>
-                <input
-                  type="text"
-                  name="venue"
-                  value={eventData.venue}
-                  onChange={handleEventChange}
-                  className="w-full border px-3 py-2 rounded"
-                />
-              </div>
-              <button
-                type="submit"
-                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-              >
-                Submit Event
-              </button>
-              {message && <p className="mt-4 text-red-600">{message}</p>}
-            </form>
+            </div>
           )}
         </div>
       </main>

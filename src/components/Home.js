@@ -1,7 +1,112 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 const Home = () => {
+  const [events, setEvents] = useState([]);
+  const [loadingEvents, setLoadingEvents] = useState(true);
+  const [eventsError, setEventsError] = useState("");
+  const [eventsPage, setEventsPage] = useState(0);
+  const [registrationMessage, setRegistrationMessage] = useState("");
+  const [registrationError, setRegistrationError] = useState("");
+  const [isSelectEventModalOpen, setIsSelectEventModalOpen] = useState(false);
+  const [selectedEventId, setSelectedEventId] = useState("");
+  const [submittingRegistration, setSubmittingRegistration] = useState(false);
+  
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const res = await fetch("http://localhost:3001/events");
+        if (!res.ok) throw new Error("Failed to fetch events");
+        const data = await res.json();
+        setEvents(Array.isArray(data) ? data : []);
+      } catch (e) {
+        setEventsError(e.message || "Error fetching events");
+      } finally {
+        setLoadingEvents(false);
+      }
+    };
+    fetchEvents();
+  }, []);
+
+  const EVENTS_PAGE_SIZE = 3;
+  const totalEventPages = Math.max(1, Math.ceil(events.length / EVENTS_PAGE_SIZE));
+  const startIdx = eventsPage * EVENTS_PAGE_SIZE;
+  const visibleEvents = events.slice(startIdx, startIdx + EVENTS_PAGE_SIZE);
+  const canPrev = eventsPage > 0;
+  const canNext = eventsPage < totalEventPages - 1;
+  const goPrev = () => setEventsPage((p) => Math.max(0, p - 1));
+  const goNext = () => setEventsPage((p) => Math.min(totalEventPages - 1, p + 1));
+
+  const handleExplorePrograms = () => {
+    setRegistrationMessage("");
+    setRegistrationError("");
+    if (!events || events.length === 0) {
+      setRegistrationError("No events available to register.");
+      toast.info("No events available to register.");
+      return;
+    }
+    setSelectedEventId(events[0]?._id || "");
+    setIsSelectEventModalOpen(true);
+  };
+
+  const handleConfirmRegistration = async () => {
+    setRegistrationMessage("");
+    setRegistrationError("");
+    setSubmittingRegistration(true);
+    try {
+      let userId = localStorage.getItem("userId");
+      if (!userId) {
+        const email = localStorage.getItem("userEmail");
+        if (!email) {
+          setSubmittingRegistration(false);
+          setRegistrationError("Please log in to register for an event.");
+          toast.error("Please log in to register for an event.");
+          return;
+        }
+        const resolveRes = await fetch(`http://localhost:3001/users/by-email?email=${encodeURIComponent(email)}`);
+        const resolveData = await resolveRes.json();
+        if (!resolveRes.ok) {
+          throw new Error(resolveData?.message || "Unable to resolve user");
+        }
+        userId = resolveData?.userId;
+        if (!userId) {
+          throw new Error("Unable to resolve user");
+        }
+        localStorage.setItem("userId", userId);
+      }
+
+      if (!selectedEventId) {
+        setSubmittingRegistration(false);
+        setRegistrationError("Please select an event.");
+        return;
+      }
+
+      const chosen = events.find((e) => e._id === selectedEventId);
+      const res = await fetch("http://localhost:3001/event-registrations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventId: selectedEventId, userId })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.message || "Failed to register for event");
+      }
+
+      setIsSelectEventModalOpen(false);
+      setRegistrationMessage("Registered successfully for: " + (chosen?.title || "Selected Event"));
+      toast.success("Registered successfully for: " + (chosen?.title || "Selected Event"));
+    } catch (e) {
+      const msg = e.message || "Error registering for event";
+      setRegistrationError(msg);
+      toast.error(msg);
+    } finally {
+      setSubmittingRegistration(false);
+    }
+  };
   return (
 
     <div
@@ -57,9 +162,67 @@ const Home = () => {
               <p className="mt-4 max-w-3xl mx-auto text-lg font-light md:text-xl">
             
               </p>
-              <button className="mt-8 flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-md h-12 px-6 bg-[#0d8bf2] text-slate-50 text-base font-bold leading-normal tracking-[0.015em] hover:bg-[#0b78d4] transition-colors mx-auto">
+              <button onClick={handleExplorePrograms} className="mt-8 flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-md h-12 px-6 bg-[#0d8bf2] text-slate-50 text-base font-bold leading-normal tracking-[0.015em] hover:bg-[#0b78d4] transition-colors mx-auto">
                 <span className="truncate">Explore Programs</span>
               </button>
+              {registrationMessage && (
+                <div className="mt-4 text-green-100 bg-green-600/80 inline-block px-3 py-2 rounded">
+                  {registrationMessage}
+                </div>
+              )}
+              {registrationError && (
+                <div className="mt-4 text-red-100 bg-red-600/80 inline-block px-3 py-2 rounded">
+                  {registrationError}
+                </div>
+              )}
+              <ToastContainer position="bottom-right" autoClose={3000} hideProgressBar />
+              {isSelectEventModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/50" onClick={() => setIsSelectEventModalOpen(false)}></div>
+                  <div className="relative z-10 w-full max-w-lg mx-auto bg-white rounded-lg shadow-xl">
+                    <div className="px-6 py-4 border-b border-slate-200">
+                      <h3 className="text-lg font-semibold text-[#0d151c]">Select an Event</h3>
+                    </div>
+                    <div className="p-6 max-h-[60vh] overflow-y-auto">
+                      <div className="space-y-3">
+                        {events.map((ev) => (
+                          <label key={ev._id} className="flex items-start gap-3 p-3 rounded border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="selectedEvent"
+                              className="mt-1"
+                              checked={selectedEventId === ev._id}
+                              onChange={() => setSelectedEventId(ev._id)}
+                            />
+                            <div>
+                              <div className="text-[#0d151c] font-medium">{ev.title}</div>
+                              <div className="text-[#49779c] text-sm">
+                                {new Date(ev.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · {ev.time || '-'} · {ev.venue || '-'}
+                              </div>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-end gap-3">
+                      <button
+                        onClick={() => setIsSelectEventModalOpen(false)}
+                        className="px-4 py-2 rounded border border-slate-300 text-[#0d151c] hover:bg-slate-100 text-sm"
+                        disabled={submittingRegistration}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleConfirmRegistration}
+                        disabled={submittingRegistration || !selectedEventId}
+                        className={`px-4 py-2 rounded text-sm ${submittingRegistration || !selectedEventId ? 'bg-slate-300 text-slate-600 cursor-not-allowed' : 'bg-[#0d8bf2] text-white hover:bg-[#0b78d4]'}`}
+                      >
+                        {submittingRegistration ? 'Registering...' : 'Register'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </section>
           {/* Features */}
@@ -161,21 +324,55 @@ const Home = () => {
                 <div>
                   <h2 className="text-3xl font-bold text-[#0d151c] mb-6">Upcoming Events</h2>
                   <div className="space-y-6">
-                    <div className="flex items-start gap-4 p-4 rounded-lg hover:bg-slate-50 transition-colors">
-                      <div
-                        className="flex-shrink-0 w-24 h-24 bg-cover bg-center rounded-md"
-                        style={{
-                          backgroundImage:
-                            'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDC-UscW0fKQdoHDHQCVL965BY9UZJtDwmv-mTXl119arYf_gKsaQgztsxzOXU2RFzEro_0FhiN2igAeFtch4a3ADqCuMXt70Url9UFxJkMnggfS5yDZjtbP5C3eew8hKTG2Q7uBJhlos6Hc4xtyNEnrnqWIax15ofZ0mTz5Km-Tc4YlIk-PelnSQnzBzu9-N8rhcZxRc8y_CLQaLv-AfJZ8dVqC_FgEk26DVtgm1K35nr0BVfYLRBLboNysYjnqFky3VMfhliykmM")',
-                        }}
-                      ></div>
-                      <div>
-                        <p className="text-[#0d151c] text-lg font-bold">Campus Open Day</p>
-                        <p className="text-[#49779c] text-sm mt-1">
-                          Join us for our annual Open Day to tour the campus, meet faculty, and learn about our programs.
-                        </p>
+                    {loadingEvents && (
+                      <div className="p-4 text-[#49779c]">Loading events...</div>
+                    )}
+                    {!loadingEvents && eventsError && (
+                      <div className="p-4 text-red-600">{eventsError}</div>
+                    )}
+                    {!loadingEvents && !eventsError && events.length === 0 && (
+                      <div className="p-4 text-[#49779c]">No upcoming events.</div>
+                    )}
+                    {!loadingEvents && !eventsError && visibleEvents.map((event) => (
+                      <div key={event._id} className="flex items-start gap-4 p-4 rounded-lg hover:bg-slate-50 transition-colors">
+                        <div className="flex-shrink-0 w-24 h-24 bg-blue-50 text-blue-700 rounded-md flex items-center justify-center text-center px-2">
+                          <div>
+                            <div className="text-sm font-semibold">
+                              {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                            </div>
+                            <div className="text-xs">{event.time || '-'}</div>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-[#0d151c] text-lg font-bold">{event.title}</p>
+                          {event.description && (
+                            <p className="text-[#49779c] text-sm mt-1">{event.description}</p>
+                          )}
+                          <p className="text-[#49779c] text-sm mt-1">{event.venue || '-'}</p>
+                        </div>
                       </div>
-                    </div>
+                    ))}
+                    {!loadingEvents && !eventsError && events.length > 0 && (
+                      <div className="flex items-center justify-between pt-2">
+                        <button
+                          onClick={goPrev}
+                          disabled={!canPrev}
+                          className={`px-3 py-1.5 rounded border text-sm ${canPrev ? 'text-[#0d151c] border-slate-300 hover:bg-slate-100' : 'text-slate-400 border-slate-200 cursor-not-allowed'}`}
+                        >
+                          ← Previous
+                        </button>
+                        <div className="text-sm text-[#49779c]">
+                          Page {eventsPage + 1} of {totalEventPages}
+                        </div>
+                        <button
+                          onClick={goNext}
+                          disabled={!canNext}
+                          className={`px-3 py-1.5 rounded border text-sm ${canNext ? 'text-[#0d151c] border-slate-300 hover:bg-slate-100' : 'text-slate-400 border-slate-200 cursor-not-allowed'}`}
+                        >
+                          Next →
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

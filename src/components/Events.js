@@ -4,6 +4,11 @@ const Events = () => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [editingEventId, setEditingEventId] = useState(null);
+  const [editForm, setEditForm] = useState({ title: '', description: '', date: '', time: '', venue: '' });
+  const [savingId, setSavingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' });
 
 useEffect(() => {
   const fetchEvents = async () => {
@@ -42,8 +47,123 @@ useEffect(() => {
     }
   };
 
+  const startEdit = (evt) => {
+    setEditingEventId(evt._id);
+    setEditForm({
+      title: evt.title || '',
+      description: evt.description || '',
+      date: evt.date ? new Date(evt.date).toISOString().slice(0, 10) : '',
+      time: evt.time || '',
+      venue: evt.venue || ''
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingEventId(null);
+    setEditForm({ title: '', description: '', date: '', time: '', venue: '' });
+  };
+
+  const onEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const saveEdit = async (id) => {
+    setSavingId(id);
+    try {
+      const res = await fetch(`http://localhost:3001/events/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editForm)
+      });
+      const result = await res.json();
+      if (!res.ok) {
+        throw new Error(result.message || 'Failed to update event');
+      }
+      const updated = result.event || result; // support either shape
+      setEvents((prev) => prev.map((e) => (e._id === id ? { ...e, ...updated } : e)));
+      cancelEdit();
+      setToast({ visible: true, message: 'Event updated successfully', type: 'success' });
+      setTimeout(() => setToast((t) => ({ ...t, visible: false })), 2500);
+    } catch (e) {
+      setToast({ visible: true, message: e.message || 'Error updating event', type: 'error' });
+      setTimeout(() => setToast((t) => ({ ...t, visible: false })), 3000);
+    } finally {
+      setSavingId(null);
+    }
+  };
+
+  const deleteEvent = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this event?')) return;
+    setDeletingId(id);
+    try {
+      const res = await fetch(`http://localhost:3001/events/${id}`, { method: 'DELETE' });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(result.message || 'Failed to delete event');
+      }
+      setEvents((prev) => prev.filter((e) => e._id !== id));
+      setToast({ visible: true, message: 'Event deleted', type: 'success' });
+      setTimeout(() => setToast((t) => ({ ...t, visible: false })), 2000);
+    } catch (e) {
+      setToast({ visible: true, message: e.message || 'Error deleting event', type: 'error' });
+      setTimeout(() => setToast((t) => ({ ...t, visible: false })), 3000);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <div className="p-6 bg-white rounded-lg shadow-sm">
+      {/* Toast */}
+      {toast.visible && (
+        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded shadow-lg text-sm ${toast.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
+          {toast.message}
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editingEventId && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black bg-opacity-40" onClick={cancelEdit}></div>
+          <div className="relative z-50 w-full max-w-lg bg-white rounded-lg shadow-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Edit Event</h3>
+              <button className="text-gray-500 hover:text-gray-700" onClick={cancelEdit}>✕</button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-gray-700 mb-1">Title</label>
+                <input type="text" name="title" value={editForm.title} onChange={onEditChange} className="w-full border px-3 py-2 rounded" required />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-700 mb-1">Description</label>
+                <textarea name="description" value={editForm.description} onChange={onEditChange} className="w-full border px-3 py-2 rounded" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-700 mb-1">Date</label>
+                  <input type="date" name="date" value={editForm.date} onChange={onEditChange} className="w-full border px-3 py-2 rounded" required />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-700 mb-1">Time</label>
+                  <input type="time" name="time" value={editForm.time} onChange={onEditChange} className="w-full border px-3 py-2 rounded" required />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm text-gray-700 mb-1">Venue</label>
+                <input type="text" name="venue" value={editForm.venue} onChange={onEditChange} className="w-full border px-3 py-2 rounded" />
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button className="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50" onClick={cancelEdit}>Cancel</button>
+              <button className={`px-4 py-2 rounded text-white ${savingId === editingEventId ? 'bg-green-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`} onClick={() => saveEdit(editingEventId)} disabled={savingId === editingEventId}>
+                {savingId === editingEventId ? 'Saving…' : 'Save changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Events</h2>
         <button className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
@@ -105,8 +225,15 @@ useEffect(() => {
                     <div className="text-sm text-gray-900">{event.venue || '-'}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button className="text-blue-600 hover:text-blue-900 mr-4">View</button>
-                    <button className="text-gray-600 hover:text-gray-900">Edit</button>
+                    <button className="mr-2 px-3 py-1.5 rounded border border-gray-300 text-gray-700 hover:bg-gray-50">View</button>
+                    <button className="mr-2 px-3 py-1.5 rounded text-white bg-gray-600 hover:bg-gray-700" onClick={() => startEdit(event)}>Edit</button>
+                    <button
+                      className={`px-3 py-1.5 rounded text-white ${deletingId === event._id ? 'bg-red-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'}`}
+                      onClick={() => deleteEvent(event._id)}
+                      disabled={deletingId === event._id}
+                    >
+                      {deletingId === event._id ? 'Deleting…' : 'Delete'}
+                    </button>
                   </td>
                 </tr>
               ))}

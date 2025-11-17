@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 function Quiz() {
+  const [title, setTitle] = useState('');
+  const [totalMarks, setTotalMarks] = useState('');
+  const [creationDate, setCreationDate] = useState('');
   const [questions, setQuestions] = useState([
     { id: 1, text: '', options: ['', '', '', ''], correctAnswer: 0 }
   ]);
@@ -25,6 +28,43 @@ function Quiz() {
     const updatedQuestions = [...questions];
     updatedQuestions[questionIndex].options[optionIndex] = value;
     setQuestions(updatedQuestions);
+  };
+
+  const handleSave = async () => {
+    // Prepare payload for backend
+    const payload = {
+      title,
+      totalMarks: Number(totalMarks),
+      creationDate: creationDate || undefined,
+      questions: questions.map(q => ({
+        text: q.text,
+        options: q.options,
+        correctAnswer: q.correctAnswer
+      }))
+    };
+
+    try {
+      const res = await fetch('http://localhost:3001/quizzes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.message || 'Failed to save quiz');
+        return;
+      }
+      alert('Quiz saved successfully');
+      // Optional: reset form
+      setTitle('');
+      setTotalMarks('');
+      setCreationDate('');
+      setQuestions([{ id: 1, text: '', options: ['', '', '', ''], correctAnswer: 0 }]);
+    } catch (e) {
+      alert('Error saving quiz');
+      // eslint-disable-next-line no-console
+      console.error(e);
+    }
   };
 
   return (
@@ -75,6 +115,8 @@ function Quiz() {
                   id="quiz-title"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="e.g., Introduction to Algebra Final Exam"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
                 />
               </div>
               <div>
@@ -86,6 +128,8 @@ function Quiz() {
                   id="total-marks"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="e.g., 100"
+                  value={totalMarks}
+                  onChange={(e) => setTotalMarks(e.target.value)}
                 />
               </div>
               <div>
@@ -96,6 +140,8 @@ function Quiz() {
                   type="date"
                   id="creation-date"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={creationDate}
+                  onChange={(e) => setCreationDate(e.target.value)}
                 />
               </div>
             </div>
@@ -175,7 +221,7 @@ function Quiz() {
               <button className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                 Cancel
               </button>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+              <button onClick={handleSave} className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                 Save Quiz
               </button>
             </div>
